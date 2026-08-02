@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "pharma",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Development\\Web Apps\\pharma\\node_modules\\next\\dist\\bin\\next", "dev", "C:\\Development\\Web Apps\\pharma", "-p", "3100"],
+      "port": 3100
+    }
+  ]
+}

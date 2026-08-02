@@ -1,26 +1,165 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+.theme-transitioning,
+.theme-transitioning * {
+  transition: none !important;
+}
+
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-ligatures: contextual;
+  font-kerning: normal;
+}
+
+html {
+  color-scheme: light;
+  background-color: var(--color-background-full);
+}
+html.dark {
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------------------
+   Document scrollbar.
+
+   The page itself is deliberately left as a native document scroller rather
+   than being wrapped in a ScrollArea. Two reasons:
+
+   1. Physics. Native scrolling already has the OS's momentum, inertia and
+      rubber-banding. Nothing we could layer on top improves it.
+   2. Our scroll-driven animations read the document scroller. The bento deck
+      is `position: sticky` and PaintedText drives its word paint from Motion's
+      `useScroll`, which measures the window by default. Moving the scroller
+      into a wrapper element silently breaks both.
+
+   So the document keeps native scrolling and only its *scrollbar* is restyled,
+   using the standard properties to match the ScrollArea thumb.
+
+   Deliberately no `::-webkit-scrollbar` rules: defining them opts the page out
+   of macOS overlay scrollbars, turning an auto-hiding scrollbar into a
+   permanently visible gutter — the opposite of the intent. `scrollbar-width` /
+   `scrollbar-color` are the standard, modern equivalents (Chrome 121+,
+   Firefox, Safari 18.2+) and leave native auto-hide behaviour intact.
+--------------------------------------------------------------------------- */
+html {
+  scrollbar-width: thin;
+  /* thumb, then track. `transparent` track keeps it an overlay, not a gutter. */
+  scrollbar-color: color-mix(in srgb, var(--foreground) 25%, transparent)
+    transparent;
+}
+
+/* Stops a scroll at the end of a modal/scroll area from chaining into the page
+   behind it. react-aria locks the body for modals, but this covers every other
+   nested scroller for free. */
+[data-slot="scroll-area-viewport"] {
+  overscroll-behavior: contain;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f4f0;
+  --foreground: #1a1916;
+  --primary: #7e96d3;
+  --primary-dark: #38477a;
+
+  --card: #ffffff;
+
+  --secondary: #707070;
+
+  --accent: #737373;
+  --tertiary: #575757;
+  --quaternary: #ffe207;
+}
+
+.dark {
+  --background: #1a1916;
+  --foreground: #ffffff;
+
+  --primary: #5e74ad;
+  --primary-dark: #a0b3f4;
+
+  --card: #252522;
+  --secondary: #adadad;
+  --accent: #dddddd;
+  --tertiary: #575757;
+  --quaternary: #ffe207;
 }
 
 @theme inline {
+  --font-sans: var(--font-outfit);
+  --font-mono: var(--font-jetbrains-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-card: var(--card);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-tertiary: var(--tertiary);
+  --color-quaternary: var(--quaternary);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
+/* body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+} */
+
+.theme-transitioning .theme-toggle-icon {
+  view-transition-name: theme-toggle-icon;
+}
+
+::view-transition-old(theme-toggle-icon),
+::view-transition-new(theme-toggle-icon) {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
+  animation-fill-mode: both;
+}
+
+::view-transition-old(theme-toggle-icon) {
+  animation-name: theme-icon-out;
+}
+
+::view-transition-new(theme-toggle-icon) {
+  animation-name: theme-icon-in;
+}
+
+@keyframes theme-icon-out {
+  to {
+    opacity: 0;
+    transform: scale(0.5) rotate(-45deg);
+  }
+}
+
+@keyframes theme-icon-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(45deg);
+  }
+}
+
+/* The scroll-painted text in painted-text.tsx holds unpainted words at reduced
+   opacity. Forced-colors mode is chosen for maximum legibility, so show every
+   word at full strength there rather than dimming any of it. */
+@media (forced-colors: active) {
+  [data-painted-word] {
+    opacity: 1 !important;
+  }
 }
