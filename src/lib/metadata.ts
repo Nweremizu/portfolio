@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
 import { socials } from "@/lib/socials";
 
-/** Falls back to localhost in dev; set NEXT_PUBLIC_SITE_URL once this is deployed. */
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+/**
+ * Falls back to localhost in dev; set NEXT_PUBLIC_SITE_URL once this is
+ * deployed. Tolerates a bare domain (e.g. a Vercel env var set to
+ * "nweremizu.vercel.app" instead of "https://nweremizu.vercel.app") — this
+ * feeds `new URL()` in the root layout, which throws on a missing scheme and
+ * takes the whole build down, so it's worth normalizing at the boundary.
+ */
+function normalizeSiteUrl(url: string | undefined): string {
+  if (!url) return "http://localhost:3000";
+  return /^https?:\/\//.test(url) ? url : `https://${url}`;
+}
+
+export const SITE_URL = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
 export const SITE_NAME = "Nweremizu Bruno";
 export const SITE_DESCRIPTION =

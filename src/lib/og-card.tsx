@@ -1,46 +1,20 @@
+import Logo from "@/components/ui/logo";
+
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
-const BG = "#1a1916";
-const PRIMARY = "#7e96d3";
-const PRIMARY_DIM = "#3d4665";
-const SECONDARY = "#adadad";
+const BG = "#f5f4f0";
+const FOREGROUND = "#1a1916";
+// primary-dark, not primary: --primary (#7e96d3) is legible on the dark
+// theme's background but too washed out on this light one.
+const PRIMARY = "#38477a";
+const SECONDARY = "#707070";
 
-/** Deterministic dithered-dot texture, echoing the /writing cover art. Same input -> same pattern, so builds stay reproducible. */
-function DotGrid({ cols = 9, rows = 7 }: { cols?: number; rows?: number }) {
-  const dots: React.ReactNode[] = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const n = (col * 7 + row * 13) % 5;
-      const color = n === 0 ? PRIMARY : n === 1 ? PRIMARY_DIM : "transparent";
-      dots.push(
-        <div
-          key={`${col}-${row}`}
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 9999,
-            background: color,
-          }}
-        />,
-      );
-    }
-  }
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        width: cols * 24,
-        gap: 16,
-      }}
-    >
-      {dots}
-    </div>
-  );
-}
+// The logo's own viewBox (364x394), used to size it without distorting it.
+const LOGO_ASPECT = 364 / 394;
+const LOGO_HEIGHT = 820;
 
-/** Shared branded card for generated OG images: dark surface, kicker/title/subtitle, dot-grid accent. */
+/** Shared branded card for generated OG images: dark surface, kicker/title/subtitle, logo mark bleeding off the edge — same oversized, cropped treatment as the About Me bento card. */
 export function OgCard({
   kicker,
   title,
@@ -56,8 +30,10 @@ export function OgCard({
         width: "100%",
         height: "100%",
         display: "flex",
+        position: "relative",
         background: BG,
         padding: 80,
+        overflow: "hidden",
       }}
     >
       <div
@@ -85,7 +61,7 @@ export function OgCard({
             display: "flex",
             fontSize: 68,
             fontWeight: 700,
-            color: "#ffffff",
+            color: FOREGROUND,
             lineHeight: 1.1,
             marginTop: 20,
           }}
@@ -105,16 +81,15 @@ export function OgCard({
         </div>
       </div>
 
-      <div
+      <Logo
         style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "flex-end",
-          width: "38%",
+          position: "absolute",
+          top: -90,
+          right: -120,
+          height: LOGO_HEIGHT,
+          width: LOGO_HEIGHT * LOGO_ASPECT,
         }}
-      >
-        <DotGrid />
-      </div>
+      />
     </div>
   );
 }
