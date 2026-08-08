@@ -46,7 +46,7 @@ export default function ProjectTile({
             <span className="text-sm text-secondary tabular-nums">
               {project.year}
             </span>
-            <RiArrowRightUpLine className="w-4 h-4 text-secondary transition-all duration-300 ease-out group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <RiArrowRightUpLine className="w-4 h-4 text-secondary transition-[color,translate] duration-300 ease-out group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export default function ProjectTile({
             loading="lazy"
             alt={`${project.title} preview`}
             src={project.image}
-            className="absolute inset-0 h-full w-full object-contain object-top pointer-events-none transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className="absolute inset-0 h-full w-full object-contain object-top pointer-events-none  -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)] transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
         </div>
 
@@ -66,7 +66,7 @@ export default function ProjectTile({
         <Button
           onPress={onOpen}
           aria-label={`${project.title} — ${project.description}`}
-          className="absolute inset-0 z-10 cursor-pointer rounded-xl transition-transform duration-150 ease-out pressed:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          className="absolute inset-0 z-10 cursor-pointer rounded-xl transition-transform duration-150 ease-out pressed:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
         />
       </article>
     </motion.div>

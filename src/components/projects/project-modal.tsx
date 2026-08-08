@@ -16,9 +16,9 @@ import { type Project, projects } from "@/lib/projects";
 const relatedTo = (slug: string) => projects.filter((p) => p.slug !== slug);
 
 const linkPillClass =
-  "inline-flex items-center gap-1.5 rounded-full border border-secondary/25 bg-card " +
-  "px-4 py-2 text-sm font-medium text-secondary transition-colors duration-150 ease " +
-  "hover:text-foreground hover:border-secondary/45 focus-visible:outline-2 " +
+  "inline-flex items-center gap-1.5 min-h-10 rounded-full border border-secondary/25 bg-card " +
+  "px-4 py-2 text-sm font-medium text-secondary transition-[color,border-color,scale] duration-150 ease " +
+  "hover:text-foreground hover:border-secondary/45 active:scale-[0.96] focus-visible:outline-2 " +
   "focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 /** One prose block of the case study. Omits itself when there's no copy to show. */
@@ -34,7 +34,7 @@ function Section({
       <h3 className="text-xl sm:text-2xl font-semibold text-foreground">
         {title}
       </h3>
-      <div className="pt-3 text-base sm:text-lg text-foreground/90 leading-relaxed max-w-2xl [&_p+p]:mt-4">
+      <div className="pt-3 text-base sm:text-lg text-foreground/90 leading-relaxed max-w-2xl [&_p]:text-pretty [&_p+p]:mt-4">
         {children}
       </div>
     </div>
@@ -117,7 +117,7 @@ export default function ProjectModal({
         <Button
           slot="close"
           aria-label="Close"
-          className="absolute top-5 right-5 grid place-items-center size-9 rounded-full border border-secondary/25 bg-card text-secondary transition-[color,transform] duration-150 ease-out hover:text-foreground active:scale-[0.94] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
+          className="absolute top-5 right-5 grid place-items-center size-10 rounded-full border border-secondary/25 bg-card text-secondary transition-[color,scale] duration-150 ease-out hover:text-foreground active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
         >
           <RiCloseLine className="size-4" />
         </Button>
@@ -133,7 +133,7 @@ export default function ProjectModal({
             <Heading
               slot="title"
               level={2}
-              className="text-4xl sm:text-5xl font-semibold text-primary leading-tight pt-1"
+              className="text-4xl sm:text-5xl font-semibold text-primary leading-tight pt-1 text-balance"
             >
               {displayProject.title}
             </Heading>
@@ -162,12 +162,12 @@ export default function ProjectModal({
             <img
               src={displayProject.image}
               alt={`${displayProject.title} preview`}
-              className="absolute inset-0 h-full w-full object-contain"
+              className="absolute inset-0 h-full w-full object-contain outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)]"
             />
           </div>
         </div>
 
-        <p className="text-lg sm:text-xl text-foreground leading-relaxed pt-10 max-w-2xl">
+        <p className="text-lg sm:text-xl text-foreground leading-relaxed text-pretty pt-10 max-w-2xl">
           {displayProject.summary}
         </p>
 
@@ -241,7 +241,9 @@ export default function ProjectModal({
                 >
                   <div className="p-5">
                     <p className="text-sm text-secondary">{p.kicker}</p>
-                    <p className="text-lg font-semibold pt-0.5">{p.title}</p>
+                    <p className="text-lg font-semibold pt-0.5 text-balance">
+                      {p.title}
+                    </p>
                     <p className="text-sm text-secondary pt-0.5">
                       {p.description}
                     </p>
@@ -251,7 +253,7 @@ export default function ProjectModal({
                       src={p.image}
                       alt=""
                       aria-hidden
-                      className="absolute inset-0 h-full w-full object-contain object-top pointer-events-none transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      className="absolute inset-0 h-full w-full object-contain object-top pointer-events-none outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)] transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                     />
                   </div>
                   {/* Stretched hit target, same pattern as ProjectTile: a
@@ -260,7 +262,7 @@ export default function ProjectModal({
                   <Button
                     onPress={() => onSelectRelated(p.slug)}
                     aria-label={`${p.title} — ${p.description}`}
-                    className="absolute inset-0 z-10 cursor-pointer rounded-xl transition-transform duration-150 ease-out pressed:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                    className="absolute inset-0 z-10 cursor-pointer rounded-xl transition-transform duration-150 ease-out pressed:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                   />
                 </li>
               ))}
