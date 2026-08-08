@@ -36,6 +36,7 @@ export default function SiteHeader() {
       </div>
 
       <div className="size-12 bg-primary rounded-full relative flex items-center justify-center overflow-hidden justify-self-center">
+        <Link href="/" className="absolute inset-0 z-10" aria-label="Home" />
         <Logo className="h-12 w-auto absolute bottom-0 translate-y-3" />
       </div>
 

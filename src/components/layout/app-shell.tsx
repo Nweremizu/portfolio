@@ -37,8 +37,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     // 100dvh, not 100vh: on mobile browsers vh ignores the collapsing URL bar,
     // which would leave the container taller than the visible viewport and
     // push the scrollbar's lower end off-screen.
-    <ScrollArea className="h-[100dvh] w-full bg-background">
-      <main className={cn(SHELL, "min-h-[100dvh]")}>{children}</main>
+    <ScrollArea className="h-dvh w-full bg-background">
+      <main className={cn(SHELL, "min-h-dvh")}>{children}</main>
     </ScrollArea>
   );
 }
