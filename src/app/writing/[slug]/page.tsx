@@ -2,7 +2,8 @@ import { marked } from "marked";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PageIntro from "@/components/sections/page-intro";
-import WritingCard from "@/components/writing/writing-card";
+import WritingGrid from "@/components/writing/writing-grid";
+import { formatDate } from "@/lib/date";
 import { getAllPosts, getPostBySlug } from "@/lib/db";
 import { SITE_NAME, TWITTER_HANDLE } from "@/lib/metadata";
 import { PROSE_CLASS } from "@/lib/prose";
@@ -71,14 +72,18 @@ export default async function WritingPostPage({
 
   return (
     <>
-      <PageIntro kicker={post.date} title={post.title} variant="post" />
+      <PageIntro
+        kicker={formatDate(post.date)}
+        title={post.title}
+        variant="post"
+      />
 
-      <div className="w-full max-w-175 px-3">
+      <div className="w-full max-w-200 px-3">
         {/* biome-ignore lint/performance/noImgElement: remote Unsplash photo, no local optimization pipeline for it */}
         <img
           src={post.coverImage}
           alt={post.title}
-          className="w-full rounded-xl aspect-video object-cover"
+          className="w-full rounded-xl aspect-video object-cover outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)]"
         />
         <p className="text-sm text-secondary pt-2 italic">
           Photo by{" "}
@@ -103,22 +108,21 @@ export default async function WritingPostPage({
       </div>
 
       <article
-        className={`w-full max-w-175 px-3 pb-16 ${PROSE_CLASS}`}
+        className={`w-full max-w-200 px-3 pb-16 ${PROSE_CLASS}`}
         // biome-ignore lint/security/noDangerouslySetInnerHtml: body is authored only through the password-gated admin page, not user-submitted.
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
       {related.length > 0 && (
-        <div className="w-full max-w-175 px-3 pb-24">
+        <div className="w-full max-w-200 px-3 pb-24">
           <div className="border-t border-secondary/20 pt-8">
             <h2 className="text-2xl font-semibold text-foreground pb-4">
               Related
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-              {related.map((p, index) => (
-                <WritingCard key={p.slug} post={p} index={index} />
-              ))}
-            </div>
+            <WritingGrid
+              posts={related}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start"
+            />
           </div>
         </div>
       )}

@@ -34,7 +34,7 @@ export default function PageIntro({
       transition={{ duration: reduced ? 0.3 : 0.7, ease: EASE }}
       className={
         isPost
-          ? "w-full max-w-175 px-3 pt-12 pb-6"
+          ? "w-full max-w-200 px-3 pt-12 pb-6"
           : "w-full max-w-275 px-3 pt-12 pb-6"
       }
     >
@@ -43,7 +43,7 @@ export default function PageIntro({
         className={
           isPost
             ? "text-4xl sm:text-6xl font-semibold text-primary pt-2 text-balance"
-            : "text-4xl sm:text-5xl font-medium text-foreground pt-2"
+            : "text-4xl sm:text-5xl font-medium text-foreground pt-2 text-balance"
         }
       >
         {title}

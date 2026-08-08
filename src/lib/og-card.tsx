@@ -1,26 +1,49 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import Logo from "@/components/ui/logo";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
-const BG = "#f5f4f0";
-const FOREGROUND = "#1a1916";
-// primary-dark, not primary: --primary (#7e96d3) is legible on the dark
-// theme's background but too washed out on this light one.
-const PRIMARY = "#38477a";
-const SECONDARY = "#707070";
+export const OG_BG = "#f5f4f0";
+export const OG_FOREGROUND = "#1a1916";
+export const OG_SECONDARY = "#707070";
 
 // The logo's own viewBox (364x394), used to size it without distorting it.
 const LOGO_ASPECT = 364 / 394;
-const LOGO_HEIGHT = 820;
+const LOGO_HEIGHT = 56;
 
-/** Shared branded card for generated OG images: dark surface, kicker/title/subtitle, logo mark bleeding off the edge — same oversized, cropped treatment as the About Me bento card. */
+function loadFont(file: string) {
+  return readFile(join(process.cwd(), "src/lib/fonts", file));
+}
+
+/** satori has no system fonts to fall back on, so the card's monospace has to be loaded as raw bytes per image. */
+export async function ogFonts() {
+  const [regular, bold] = await Promise.all([
+    loadFont("JetBrainsMono-Regular.ttf"),
+    loadFont("JetBrainsMono-Bold.ttf"),
+  ]);
+  return [
+    {
+      name: "JetBrains Mono",
+      data: regular,
+      weight: 400 as const,
+      style: "normal" as const,
+    },
+    {
+      name: "JetBrains Mono",
+      data: bold,
+      weight: 700 as const,
+      style: "normal" as const,
+    },
+  ];
+}
+
+/** Shared branded card for generated OG images: a minimal identity card — logo mark in the corner, title/subtitle stacked bottom-left, all in the site's monospace. */
 export function OgCard({
-  kicker,
   title,
   subtitle,
 }: {
-  kicker: string;
   title: string;
   subtitle: string;
 }) {
@@ -30,40 +53,23 @@ export function OgCard({
         width: "100%",
         height: "100%",
         display: "flex",
-        position: "relative",
-        background: BG,
-        padding: 80,
-        overflow: "hidden",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        background: OG_BG,
+        padding: 72,
+        fontFamily: "JetBrains Mono",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          width: "62%",
-        }}
-      >
+      <Logo style={{ height: LOGO_HEIGHT, width: LOGO_HEIGHT * LOGO_ASPECT }} />
+
+      <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
             display: "flex",
-            fontSize: 26,
-            fontWeight: 600,
-            color: PRIMARY,
-            letterSpacing: 2,
-            textTransform: "uppercase",
-          }}
-        >
-          {kicker}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            fontSize: 68,
+            fontSize: 56,
             fontWeight: 700,
-            color: FOREGROUND,
-            lineHeight: 1.1,
-            marginTop: 20,
+            color: OG_FOREGROUND,
+            lineHeight: 1.15,
           }}
         >
           {title}
@@ -71,25 +77,17 @@ export function OgCard({
         <div
           style={{
             display: "flex",
-            fontSize: 30,
-            color: SECONDARY,
+            fontSize: 28,
+            fontWeight: 400,
+            color: OG_SECONDARY,
             lineHeight: 1.4,
-            marginTop: 28,
+            marginTop: 16,
+            maxWidth: 780,
           }}
         >
           {subtitle}
         </div>
       </div>
-
-      <Logo
-        style={{
-          position: "absolute",
-          top: -90,
-          right: -120,
-          height: LOGO_HEIGHT,
-          width: LOGO_HEIGHT * LOGO_ASPECT,
-        }}
-      />
     </div>
   );
 }

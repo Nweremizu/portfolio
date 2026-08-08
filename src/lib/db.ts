@@ -24,6 +24,20 @@ export interface Post {
 const POST_COLUMNS =
   "id, slug, title, date, body, coverImage, coverCreditName, coverCreditUrl";
 
+/** libsql rows aren't always plain objects — normalize before they cross a Server->Client Component boundary. */
+function toPost(row: Record<string, unknown>): Post {
+  return {
+    id: Number(row.id),
+    slug: String(row.slug),
+    title: String(row.title),
+    date: String(row.date),
+    body: String(row.body),
+    coverImage: String(row.coverImage),
+    coverCreditName: String(row.coverCreditName),
+    coverCreditUrl: String(row.coverCreditUrl),
+  };
+}
+
 let initialized: Promise<void> | null = null;
 
 /** Creates the table (if needed) and seeds it (only if it's empty), once per process. */
@@ -72,7 +86,7 @@ export async function getAllPosts(): Promise<Post[]> {
   const { rows } = await client.execute(
     `SELECT ${POST_COLUMNS} FROM posts ORDER BY date DESC`,
   );
-  return rows as unknown as Post[];
+  return rows.map(toPost);
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
@@ -81,7 +95,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     sql: `SELECT ${POST_COLUMNS} FROM posts WHERE slug = ?`,
     args: [slug],
   });
-  return (rows[0] as unknown as Post) ?? null;
+  return rows[0] ? toPost(rows[0]) : null;
 }
 
 export async function getPostById(id: number): Promise<Post | null> {
@@ -90,7 +104,7 @@ export async function getPostById(id: number): Promise<Post | null> {
     sql: `SELECT ${POST_COLUMNS} FROM posts WHERE id = ?`,
     args: [id],
   });
-  return (rows[0] as unknown as Post) ?? null;
+  return rows[0] ? toPost(rows[0]) : null;
 }
 
 export async function createPost(post: Omit<Post, "id">): Promise<void> {

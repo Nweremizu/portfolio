@@ -82,7 +82,7 @@ export const projects: Project[] = [
     summary:
       "Keipy is a mobile invoicing and inventory app I built for my dad's business, to replace an expensive invoicing platform with something cheaper, better-designed, and built to keep working when the connection drops.",
     image: "/images/keipy.png",
-    year: "2025",
+    year: "2026",
     stack: [
       "React Native",
       "Expo",
@@ -118,7 +118,7 @@ export const projects: Project[] = [
     summary:
       "Ekklesia is church operations software for African congregations — membership, groups, attendance, visitor follow-up, and team access in one multi-tenant platform, built to replace the pile of spreadsheets most churches run on.",
     image: "/images/ekklesia.png",
-    year: "2024",
+    year: "2026",
     stack: [
       "Laravel",
       "Inertia.js",

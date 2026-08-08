@@ -1,10 +1,22 @@
 import { ImageResponse } from "next/og";
+import Logo from "@/components/ui/logo";
+import { formatDate } from "@/lib/date";
 import { getPostBySlug } from "@/lib/db";
-import { OG_CONTENT_TYPE, OG_SIZE } from "@/lib/og-card";
+import {
+  OG_BG,
+  OG_CONTENT_TYPE,
+  OG_FOREGROUND,
+  OG_SECONDARY,
+  OG_SIZE,
+  ogFonts,
+} from "@/lib/og-card";
 
 export const alt = "Engineering Thoughts — Nweremizu Bruno";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
+
+const LOGO_ASPECT = 364 / 394;
+const LOGO_HEIGHT = 44;
 
 export default async function Image({
   params,
@@ -20,50 +32,46 @@ export default async function Image({
         width: "100%",
         height: "100%",
         display: "flex",
-        background: "#1a1916",
+        background: OG_BG,
+        fontFamily: "JetBrains Mono",
       }}
     >
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          justifyContent: "space-between",
           width: "44%",
-          padding: "60px 50px",
+          padding: 56,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            fontSize: 24,
-            fontWeight: 600,
-            color: "#7e96d3",
-            letterSpacing: 1,
-          }}
-        >
-          {post?.date ?? "Writing"}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            fontSize: 44,
-            fontWeight: 700,
-            color: "#ffffff",
-            lineHeight: 1.2,
-            marginTop: 18,
-          }}
-        >
-          {post?.title ?? "Engineering Thoughts"}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            fontSize: 24,
-            color: "#adadad",
-            marginTop: 32,
-          }}
-        >
-          Nweremizu Bruno — Writing
+        <Logo
+          style={{ height: LOGO_HEIGHT, width: LOGO_HEIGHT * LOGO_ASPECT }}
+        />
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 20,
+              fontWeight: 400,
+              color: OG_SECONDARY,
+            }}
+          >
+            {post ? formatDate(post.date) : "Writing"}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 40,
+              fontWeight: 700,
+              color: OG_FOREGROUND,
+              lineHeight: 1.2,
+              marginTop: 14,
+            }}
+          >
+            {post?.title ?? "Engineering Thoughts"}
+          </div>
         </div>
       </div>
 
@@ -80,6 +88,6 @@ export default async function Image({
         />
       )}
     </div>,
-    { ...size },
+    { ...size, fonts: await ogFonts() },
   );
 }

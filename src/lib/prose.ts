@@ -1,7 +1,7 @@
 /** Styling for parsed markdown post bodies — shared by the live post page and the admin preview, so a draft looks exactly like what publishing will produce. */
 export const PROSE_CLASS =
   "text-foreground leading-relaxed " +
-  "[&_p]:pt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:pt-8 " +
+  "[&_p]:text-lg [&_p]:pt-4 [&_p]:text-pretty [&_h2]:text-3xl [&_h2]:font-semibold [&_h2]:pt-8 " +
   "[&_h3]:text-xl [&_h3]:font-semibold [&_h3]:pt-6 " +
   "[&_strong]:font-semibold [&_em]:italic " +
   "[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:pt-4 " +

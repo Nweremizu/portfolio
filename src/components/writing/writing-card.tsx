@@ -18,12 +18,12 @@ export default function WritingCard({
     >
       <div className="p-5">
         <p className="text-sm text-secondary">Writing</p>
-        <h2 className="text-lg font-semibold text-foreground pt-1 group-hover:underline decoration-2 decoration-dotted underline-offset-4">
+        <h2 className="text-lg font-semibold text-foreground pt-1 text-balance group-hover:underline decoration-2 decoration-dotted underline-offset-4">
           {post.title}
         </h2>
       </div>
       <div className={`relative ${ASPECTS[index % ASPECTS.length]}`}>
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)]">
           <DitheredCover src={post.coverImage} alt={post.title} />
         </div>
       </div>

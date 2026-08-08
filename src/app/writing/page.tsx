@@ -1,5 +1,5 @@
 import PageIntro from "@/components/sections/page-intro";
-import WritingCard from "@/components/writing/writing-card";
+import WritingGrid from "@/components/writing/writing-grid";
 import { getAllPosts } from "@/lib/db";
 import { pageMetadata } from "@/lib/metadata";
 
@@ -23,11 +23,10 @@ export default async function WritingPage() {
         description="Notes on shipping real products — AI-assisted development, architecture calls, and what building things actually teaches."
       />
 
-      <div className="w-full max-w-275 px-3 pb-16 columns-1 sm:columns-2 lg:columns-3 gap-4">
-        {posts.map((post, index) => (
-          <WritingCard key={post.slug} post={post} index={index} />
-        ))}
-      </div>
+      <WritingGrid
+        posts={posts}
+        className="w-full max-w-275 px-3 pb-16 columns-1 sm:columns-2 lg:columns-3 gap-4"
+      />
     </>
   );
 }
