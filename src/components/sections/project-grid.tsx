@@ -37,25 +37,49 @@ export default function ProjectGrid({
 
   const shownProject = projects.find((p) => p.slug === shownSlug) ?? null;
 
+  // Equal columns and one shared gutter, so every tile is the same size at
+  // every breakpoint. p-3 on each tile matches the home grid's rhythm.
+  const grid = (list: typeof projects) => (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={gridContainer}
+      className="w-full max-w-275 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {list.map((project) => (
+        <ProjectTile
+          key={project.slug}
+          project={project}
+          reduced={reduced}
+          onOpen={() => openProject(project.slug)}
+        />
+      ))}
+    </motion.div>
+  );
+
   return (
     <>
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={gridContainer}
-        // Equal columns and one shared gutter, so every tile is the same size
-        // at every breakpoint. p-3 on each tile matches the home grid's rhythm.
-        className="w-full max-w-275 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      {grid(projects.filter((p) => !p.hobby))}
+
+      <section
+        aria-labelledby="hobby-heading"
+        className="w-full max-w-275 flex flex-col items-center"
       >
-        {projects.map((project) => (
-          <ProjectTile
-            key={project.slug}
-            project={project}
-            reduced={reduced}
-            onOpen={() => openProject(project.slug)}
-          />
-        ))}
-      </motion.div>
+        <header className="w-full px-3 pt-16 pb-3">
+          <p className="text-accent text-xs sm:text-sm">On the side</p>
+          <h2
+            id="hobby-heading"
+            className="text-3xl sm:text-4xl font-medium text-foreground pt-2 text-balance"
+          >
+            Hardware.
+          </h2>
+          <p className="text-base sm:text-lg text-secondary pt-3 max-w-xl">
+            Things I build for fun: microcontrollers, circuits, and the firmware
+            that runs them.
+          </p>
+        </header>
+        {grid(projects.filter((p) => p.hobby))}
+      </section>
 
       {shownProject && (
         <ProjectModal

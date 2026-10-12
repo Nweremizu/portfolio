@@ -26,6 +26,8 @@ export interface Project {
   stack: string[];
   /** Omit a key (or the whole object) rather than link to a URL that doesn't exist yet. */
   links?: { demo?: string; github?: string };
+  /** Hardware built for fun. Listed in its own section under the main grid. */
+  hobby?: boolean;
   caseStudy: CaseStudy;
 }
 
@@ -231,6 +233,46 @@ export const projects: Project[] = [
         "The attendance and analytics UX needed real iteration, because there was no existing workflow to model it against: I had to design it, watch it fail to fit how a real service actually runs, and adjust. The visitor pipeline is the clearest evidence of that: it didn't exist in the first version. It got added once a flat member list stopped being enough to actually track someone from first visit to follow-up to membership.",
       lessons:
         "Good software here is as much about understanding how a church actually operates on a Sunday as it is about writing code. And letting the data model grow only when a real gap shows up (attendance first, then visitors and follow-ups once that gap was obvious) kept the system from being over-built around problems that didn't exist yet.",
+    },
+  },
+  {
+    slug: "network-manager",
+    kicker: "Hardware",
+    title: "Network Manager",
+    description: "ESP32-S3 household router",
+    summary:
+      "A small router built on an ESP32-S3 that sits between the house and the ISP router: per-device download tracking, daily quotas, speed caps, a dashboard served from the board itself, a 128×64 status LCD with a mascot that reacts to what the network is doing, and a cloud archive of daily usage.",
+    image: "/images/network-manager.png",
+    year: "2026",
+    stack: [
+      "ESP32-S3",
+      "C",
+      "ESP-IDF",
+      "lwIP",
+      "FreeRTOS",
+      "React",
+      "Cloudflare Workers",
+      "D1",
+    ],
+    hobby: true,
+    caseStudy: {
+      problem:
+        "Our home internet is a capped mobile data plan shared by a laptop, a phone, and a smart TV. When the data ran out early there was no way to tell which device had used it, and no way to stop one device from eating everyone else's share. Off-the-shelf routers with per-device quotas exist, but I wanted to understand the whole path a packet takes, so I built one.",
+      challenge:
+        "Counting and limiting traffic per device on a microcontroller with no room for a packet-inspection layer. The board runs as a Wi-Fi client to the ISP router and as an access point for the house, with lwIP's built-in NAT between them. I wrapped the access point's link-output function, the last stop before a frame goes out over the air, and read the destination MAC address straight from the Ethernet header. That one hook attributes every downloaded byte to a device and polices it with a per-device token bucket: frames over budget are dropped, and TCP backs off on its own. Replies the board itself sends, like the dashboard and DNS, are skipped so they never count against anyone's quota.",
+      architecture:
+        "Firmware is about 5,000 lines of C on ESP-IDF and FreeRTOS. Usage counters live in RAM and are written to flash every five minutes, not on every packet, to protect the flash's write lifespan; daily totals reset at NTP-synced local midnight. On first boot a captive portal collects the upstream Wi-Fi details, tests the connection before saving it, and rolls back if it fails. The dashboard is a React, Vite, and Tailwind app built to fixed filenames, gzipped, and served from the board's own flash, with one-second live updates over a WebSocket. A Cloudflare Worker with a D1 database archives daily usage per device, and the status screen is a KS0108 LCD driven through an MCP23017 I/O expander over I2C.",
+      decisions: [
+        "Over quota means throttled, not blocked: a device that hits its daily limit drops to a slow fixed speed instead of losing the connection, and an always-on per-device speed cap applies alongside it, whichever is lower.",
+        "Cloud uploads are safe to retry because a repeated snapshot can only ever increase the stored total for a device and day.",
+        "The board keeps the cloud token private and proxies analytics requests itself, so the browser never sees a credential and the Worker never exposes the local dashboard.",
+        "Cloud requests run in a bounded background worker, one at a time, so a slow upstream can never block the board's web server.",
+        "The LCD only sends the parts of the screen that changed, streamed as a single I2C transfer, and a host-side renderer draws every screen and mood to an image so the UI can be checked without flashing the board.",
+      ],
+      whatWentWrong:
+        "Software NAT on an ESP32-S3 tops out at roughly 2 to 8 Mbps. That's fine for browsing and messaging, not for a house that streams 4K, and it's an accepted limit of the hardware rather than something to fix. Devices are identified by MAC address, so a phone using a private, randomised address shows up as a new device, which I haven't solved. And the latency targets for the dashboard have so far only been checked against a desktop mock; measuring them on the real board with seven devices connected is still on the list.",
+      lessons:
+        "Embedded work rewards finding the one place everything already passes through. A single hook at the right layer replaced what would otherwise have been packet parsing, connection tracking, and a lot more code. It also taught me to respect the hardware's limits up front: flash has a write budget, the NAT has a ceiling, and the design is better for saying so in the spec instead of discovering it later.",
     },
   },
 ];
