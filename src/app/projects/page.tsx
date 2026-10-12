@@ -21,7 +21,7 @@ export default async function ProjectsPage({
       <PageIntro
         kicker="Selected work"
         title="Projects."
-        description="Practical products I've designed and built — from desktop and mobile apps to full web platforms."
+        description="Practical products I've designed and built, from desktop and mobile apps to full web platforms."
       />
       <ProjectGrid initialOpenSlug={open} />
     </>
