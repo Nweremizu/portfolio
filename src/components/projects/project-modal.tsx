@@ -261,7 +261,7 @@ export default function ProjectModal({
                       so the press target is a separate, covering element. */}
                   <Button
                     onPress={() => onSelectRelated(p.slug)}
-                    aria-label={`${p.title} — ${p.description}`}
+                    aria-label={`${p.title}: ${p.description}`}
                     className="absolute inset-0 z-10 cursor-pointer rounded-xl transition-transform duration-150 ease-out pressed:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                   />
                 </li>

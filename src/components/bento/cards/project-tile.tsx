@@ -65,7 +65,7 @@ export default function ProjectTile({
             heading above keeps its semantics. */}
         <Button
           onPress={onOpen}
-          aria-label={`${project.title} — ${project.description}`}
+          aria-label={`${project.title}: ${project.description}`}
           className="absolute inset-0 z-10 cursor-pointer rounded-xl transition-transform duration-150 ease-out pressed:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
         />
       </article>
