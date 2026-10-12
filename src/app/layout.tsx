@@ -27,8 +27,8 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Full-Stack Developer`,
-    template: `%s — ${SITE_NAME}`,
+    default: `${SITE_NAME} | Full-Stack Developer`,
+    template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
   keywords: [
@@ -49,13 +49,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
-    title: `${SITE_NAME} — Full-Stack Developer`,
+    title: `${SITE_NAME} | Full-Stack Developer`,
     description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
     creator: TWITTER_HANDLE,
-    title: `${SITE_NAME} — Full-Stack Developer`,
+    title: `${SITE_NAME} | Full-Stack Developer`,
     description: SITE_DESCRIPTION,
   },
 };

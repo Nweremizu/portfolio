@@ -11,7 +11,7 @@ import {
   ogFonts,
 } from "@/lib/og-card";
 
-export const alt = "Engineering Thoughts — Nweremizu Bruno";
+export const alt = "Engineering Thoughts | Nweremizu Bruno";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 

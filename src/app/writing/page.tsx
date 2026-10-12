@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/metadata";
 export const metadata = pageMetadata({
   title: "Writing",
   description:
-    "Engineering thoughts on shipping real products — AI-assisted development, architecture decisions, and lessons from building things.",
+    "Engineering thoughts on shipping real products: AI-assisted development, architecture decisions, and lessons from building things.",
   path: "/writing",
 });
 
@@ -20,7 +20,7 @@ export default async function WritingPage() {
       <PageIntro
         kicker="Writing"
         title="Engineering Thoughts."
-        description="Notes on shipping real products — AI-assisted development, architecture calls, and what building things actually teaches."
+        description="Notes on shipping real products: AI-assisted development, architecture calls, and what building things actually teaches."
       />
 
       <WritingGrid

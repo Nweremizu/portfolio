@@ -17,7 +17,7 @@ export const SITE_URL = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
 export const SITE_NAME = "Nweremizu Bruno";
 export const SITE_DESCRIPTION =
-  "Full-stack developer building practical products — from AI-powered tools to desktop, mobile, and web applications.";
+  "Full-stack developer building practical products, from AI-powered tools to desktop, mobile, and web applications.";
 export const TWITTER_HANDLE = socials.X.replace("https://x.com/", "@");
 
 /** Consistent title/description/OG/Twitter/canonical for a static route. */
