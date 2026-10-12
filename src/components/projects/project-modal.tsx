@@ -181,7 +181,7 @@ export default function ProjectModal({
                 className={linkPillClass}
               >
                 <RiExternalLinkLine className="size-4" />
-                Live demo
+                Visit site
               </a>
             )}
             {displayProject.links?.github && (

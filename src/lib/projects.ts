@@ -39,39 +39,84 @@ export const projects: Project[] = [
     slug: "quiro",
     kicker: "Desktop App",
     title: "Quiro",
-    description: "Cinematic screen recorder",
+    description: "Native screen studio",
     summary:
-      "Quiro is a desktop screen recorder and editor for people who need a polished product demo without hiring a video editor — recording, cursor-aware zoom, captions, and an AI editing agent in one app, with native capture pipelines for Windows and macOS.",
+      "Quiro is a native screen recorder and editor for Windows, macOS, and Linux — screen, camera, microphone, and system audio captured together, then zooms, backgrounds, captions, and annotations composed locally and exported as a file you own. No account, no upload step.",
     image: "/images/quiro.png",
-    year: "2025",
+    year: "2026",
     stack: [
-      "Electron",
+      "Tauri",
+      "Rust",
       "React",
       "TypeScript",
-      "PixiJS",
+      "wgpu",
       "FFmpeg",
-      "Swift",
-      "C++",
-      "Claude",
+      "Next.js",
+      "Cloudflare R2",
     ],
-    links: { github: "https://github.com/Nweremizu/quiro" },
+    links: {
+      demo: "https://quiro.app",
+      github: "https://github.com/Nweremizu/quiro",
+    },
     caseStudy: {
       problem:
-        "Making a polished product demo video usually means either paying for a subscription tool or paying a video editor. Both cost money and time most people don't have on hand. I wanted a recorder that did the work a video editor would — smooth cursor motion, intentional zoom, clean framing — automatically.",
+        "Making a polished product demo usually means paying for a subscription tool or paying a video editor, and most of those tools want your recordings in their cloud. I wanted a recorder that does a video editor's framing work for you — intentional zoom, cursor emphasis, clean composition — while every recording stays a plain file on your own machine.",
       challenge:
-        "Neither Windows nor macOS exposes cursor state the same way, so \"track the cursor\" turned out to be two different engineering problems, not one. On Windows, the OS hands you the cursor's identity directly — a native helper just polls it and matches it against the small set of stock system cursors. On macOS there's no equivalent API: I had to render each candidate system cursor to a bitmap and score the live cursor against them by shape, with an Accessibility-API fallback that inspects the currently focused UI element when the bitmap match is inconclusive. Two genuinely different native implementations, one for each platform, to produce what looks like the same feature.",
+        "Annotations were second-class citizens. The editor drew them twice — as SVG on screen and as Canvas2D when exporting a screenshot — and the Rust video renderer didn't know they existed, so an arrow or a text callout could never appear in an exported video. There were even two parallel systems for the same idea: timed, GPU-drawn text and mask segments on the timeline, and untimed, pixel-space annotations in the canvas. I unified them into one model with real timing, normalized coordinates, and anchors, moved shapes, arrows, text, masks, and focus effects into the native wgpu renderer, and made export a single native pass. The on-screen SVG layer now only draws selection chrome — what you see in the editor and what lands in the file come from the same renderer.",
       architecture:
-        'Electron for the app shell, React and TypeScript for the editor UI, PixiJS as the real-time compositor for cursor, webcam, captions, and annotation layers, and FFmpeg for encoding and export. Capture itself drops down to native code per platform — a Windows Graphics Capture pipeline in C++, and a ScreenCaptureKit pipeline in Swift for macOS — because Electron alone can\'t get the frame rate, GPU access, or system-audio capture a screen recorder actually needs. The AI editing agent runs as a tool-calling loop against Claude (with a MiniMax fallback provider): a lightweight "Recording Brain" fuses the caption transcript and cursor telemetry into a compact summary, the model reasons over eight defined editing tools — auto-zoom on clicks, remove silences and filler words, generate captions, add annotations, and more — and every run is wrapped in a single undo step.',
+        "A Tauri v2 shell with a React and TypeScript editor UI over a Rust workspace of around forty crates. Capture is native per platform: Windows Graphics Capture through Direct3D, ScreenCaptureKit on macOS, and X11 (XComposite per-window capture) or Wayland on Linux, alongside dedicated camera crates for Media Foundation, DirectShow, and AVFoundation. A wgpu renderer composites backgrounds, padding, shadows, perspective, zoom, and annotations, and encoding runs through FFmpeg plus the hardware encoders each OS provides. Rust types are exported to TypeScript with specta, so the UI and the engine can't drift apart. The marketing site at quiro.app is Next.js, and releases ship through a Cloudflare R2 bucket that feeds a signed auto-updater.",
       decisions: [
-        "Went fully native for capture on each platform (WGC + C++ on Windows, ScreenCaptureKit + Swift on macOS) rather than relying on Electron's built-in screen-capture APIs, because neither the frame rate nor system-audio capture were good enough through the generic path.",
-        'Built a small "Recording Brain" summary layer instead of feeding the AI agent raw transcript and cursor data — keeps token usage bounded even on long recordings.',
-        "Gave the agent a fixed, explicit tool contract (eight named tools with JSON schemas) instead of open-ended free-form edits, and added a safety net that disables a tool for the rest of a run after it fails twice, so the agent can't get stuck retrying something that can't succeed.",
-        "Kept the whole agent run inside one undo step rather than one undo step per edit, so a bad AI pass is always a single keystroke away from gone.",
+        "Rebuilt on top of the open-source Cap project's Rust capture and encoding stack instead of writing native capture from scratch a second time. The first version of Quiro was Electron with hand-written C++ and Swift capture helpers; forking a proven core let the effort go into the editor instead.",
+        "One renderer for everything: annotations, masks, and text moved into the native wgpu pipeline, so preview and export can't disagree.",
+        "Release files are immutable, versioned folders cached forever, while only the small updater and download manifests are served uncached — a new release reaches every installed copy within minutes without ever invalidating an installer.",
+        "Crash and camera diagnostics through PostHog report the failure stage, OS, app version, and hardware vendor/product IDs, but never device serial numbers.",
+        "Linux went from a generic fallback to a first-class download and auto-update target, with real per-window capture on X11 and output enumeration on Wayland.",
       ],
       whatWentWrong:
-        "The AI agent currently applies its edits directly — there's no preview or plain-language summary before changes land, and undo is the only way back if a run goes wrong. That's a deliberate, acknowledged gap in the current roadmap, not an oversight: trust-building features like edit previews and per-change revert are planned but not built yet. Linux support is the other honest limitation — there's no native capture helper for it yet, so it falls back to generic behavior rather than the tuned pipeline Windows and macOS get.",
+        "Forking a large, mature codebase means inheriting what you don't understand yet. The out-of-process muxer binary was dropped during the fork and had to be ported back after the fact. macOS builds were briefly reported by Gatekeeper as \"damaged\" for anyone who downloaded them, which I fixed with ad-hoc signing — full Apple notarization is still outstanding. And the AI editing agent from the Electron version didn't survive the rebuild; it's not in the current app.",
       lessons:
-        'Architecture has to come first, especially once AI is generating a meaningful share of the code — get the structure wrong early and every feature after it costs more than it should. The cursor-tracking work also taught me that "the same feature" on two operating systems can mean two genuinely different implementations under the hood, and that\'s fine as long as the seam between them is clean.',
+        "Knowing when not to write something yourself is an engineering skill. Building capture by hand the first time taught me how it works, and that's exactly what made it possible to read, trust, and extend someone else's far more complete version. The annotation work taught the other half: the real fracture is usually one layer below where it feels like it is — the canvas wasn't the problem, the annotation model was.",
+    },
+  },
+  {
+    slug: "watcher",
+    kicker: "Developer Tool",
+    title: "Watcher",
+    description: "Design tools for live React apps",
+    summary:
+      "Watcher opens a running React app like a design file — rulers and guides, live style editing, a free canvas, responsive previews, an SVG editor, design-system extraction, and a profiler, all on top of the real page. Edits write back into your JSX as Tailwind classes, and production builds ship none of it.",
+    image: "/images/watcher.png",
+    year: "2026",
+    stack: [
+      "React",
+      "TypeScript",
+      "Vite",
+      "Babel",
+      "Tailwind CSS",
+      "Web Extensions",
+    ],
+    links: {
+      demo: "https://www.npmjs.com/package/@nweremizu/watcher-ui",
+      github: "https://github.com/Nweremizu/watcher",
+    },
+    caseStudy: {
+      problem:
+        "Polishing UI means bouncing between three places: a design tool that isn't the real app, browser devtools whose edits vanish on reload, and the code where you retype every value by hand. I wanted to tune spacing, type, and colour directly on the running app and have those edits land in the source.",
+      challenge:
+        "Writing edits back to code safely. A Vite plugin stamps every JSX element with its source line and column before React's own transform runs, so a click on the page maps to an exact spot in a file. Write-back then parses that file with Babel and edits it with magic-string — never regex on code — turning each CSS change into the matching Tailwind utility on the scale (padding-top: 44px → pt-11) or an arbitrary value when nothing fits. It replaces only the class for the same property, leaves md: and hover: variants alone, and an edit made in the 820px preview is written as md:. When it can't edit safely — a fully computed className, or an element rendered by .map() that would change every copy — it says so instead of guessing.",
+      architecture:
+        "The overlay is a React app mounted in its own shadow root and React root, so the host app's CSS can't reach it and it never re-renders the host's tree. Before it's opened it costs under 1 kB gzipped; the ~103 kB overlay chunk is fetched while the browser is idle. A production export condition resolves the package to an empty module, so Vite and webpack builds ship zero bytes. The Vite plugin only runs on the dev server, only accepts same-origin requests, and only writes .jsx/.tsx files inside the project. A Chrome and Firefox extension runs the same overlay on any website, minus write-back.",
+      decisions: [
+        "Dev-only by construction — an export condition and a NODE_ENV guard instead of asking people to wrap it in an if.",
+        "Shadow-root isolation in both directions: the app's styles can't break the tool, and the tool can't restyle the app.",
+        "Responsive previews are real viewports, so media queries and vw units respond as they would on a device — and inspecting inside a preview shares one undo history with the main page.",
+        "Your editor's git diff is the review step: write-back makes ordinary source edits rather than keeping a hidden layer of overrides.",
+        "Shipped 0.1 with the unfinished Animate tab hidden behind a flag rather than released half-done.",
+      ],
+      whatWentWrong:
+        "Write-back only speaks Tailwind for now; other styling approaches get live editing and Copy CSS but no save-to-code. The animation timeline isn't finished, which is why it's flagged off. And the overlay grew fast — most of its UI still lives in one very large component file that needs splitting before the next round of features.",
+      lessons:
+        "Developer tools live or die on trust. People will only let a tool rewrite their source if every write is predictable, reviewable, and refuses loudly when it's unsure — so the guardrails ended up being more work than the edits themselves, and they're the part that matters most.",
     },
   },
   {
@@ -91,6 +136,7 @@ export const projects: Project[] = [
       "TanStack Query",
       "NativeWind",
     ],
+    links: { demo: "https://keipy.xyz" },
     caseStudy: {
       problem:
         "My dad's business was paying a premium subscription for an invoicing tool with a dated interface and thin inventory features. He already knew I could build software, so instead of paying for a tool built for someone else's workflow, I built one for his — quoting, invoicing, and stock tracking in a single flow, on a UI that feels like 2025 rather than 2015.",
@@ -127,6 +173,7 @@ export const projects: Project[] = [
       "Tailwind CSS",
       "Recharts",
     ],
+    links: { github: "https://github.com/Nweremizu/ekklesia" },
     caseStudy: {
       problem:
         "It started narrow: my own church needed a way to track attendance instead of a paper register. But attendance turned out to be the smallest part of what a growing congregation actually needs to run — membership records, groups, visitor follow-up, and who on the team can see or change what. Those were all still living on scattered spreadsheets, so the real problem was operational, not just a missing feature.",
