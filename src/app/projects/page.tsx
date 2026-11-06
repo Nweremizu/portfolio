@@ -1,29 +1,14 @@
-import PageIntro from "@/components/sections/page-intro";
-import ProjectGrid from "@/components/sections/project-grid";
-import { pageMetadata } from "@/lib/metadata";
+import { redirect } from "next/navigation";
 
-export const metadata = pageMetadata({
-  title: "Projects",
-  description:
-    "Practical products I've designed and built, from desktop and mobile apps to full web platforms.",
-  path: "/projects",
-});
-
+/**
+ * The index now lives on the home page. Old links keep working:
+ * `/projects?open=slug` (the retired modal) lands on that case study.
+ */
 export default async function ProjectsPage({
   searchParams,
 }: {
   searchParams: Promise<{ open?: string }>;
 }) {
   const { open } = await searchParams;
-
-  return (
-    <>
-      <PageIntro
-        kicker="Selected work"
-        title="Projects."
-        description="Practical products I've designed and built, from desktop and mobile apps to full web platforms."
-      />
-      <ProjectGrid initialOpenSlug={open} />
-    </>
-  );
+  redirect(open ? `/projects/${encodeURIComponent(open)}` : "/");
 }

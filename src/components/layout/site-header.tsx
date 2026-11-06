@@ -1,64 +1,36 @@
 import Link from "next/link";
-import GithubIcon from "@/components/icons/github";
-import GmailIcon from "@/components/icons/gmail";
-import LinkedinIcon from "@/components/icons/linkedin";
-import XIcon from "@/components/icons/x";
+import { SoundToggle } from "@/components/sound/sounds";
 import Logo from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { socials } from "@/lib/socials";
-
-// Icon-only links, so each needs an explicit accessible name — an <svg> with
-// no text leaves a screen reader announcing nothing but "link".
-const navSocials = [
-  { label: "Email", href: socials.Gmail, Icon: GmailIcon },
-  { label: "GitHub", href: socials.GitHub, Icon: GithubIcon },
-  { label: "LinkedIn", href: socials.LinkedIn, Icon: LinkedinIcon },
-  { label: "X", href: socials.X, Icon: XIcon },
-];
-
-const navLinkClass =
-  "text-secondary transition-colors duration-150 ease font-medium " +
-  "hover:text-foreground wrap-break-word hover:underline hover:decoration-2 decoration-dotted " +
-  "underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary";
+import { intro } from "@/lib/content";
 
 export default function SiteHeader() {
   return (
-    <nav className="grid grid-cols-[1fr_auto_1fr] w-full items-center">
-      <div className="flex items-center justify-center gap-8 justify-self-start">
-        {/* These were <div>s — styled to look like links but not focusable,
-            not announced as links, and not navigable. */}
-        <Link href="/projects" className={navLinkClass}>
-          Projects
-        </Link>
-        <Link href="/writing" className={navLinkClass}>
+    <header className="rise flex items-center justify-between gap-4 pt-8 pb-16 sm:pt-12 sm:pb-20">
+      <Link href="/" className="flex min-w-0 items-center gap-3">
+        {/* Avatar mark: the illustrated logo cropped into a circle. */}
+        <span className="relative size-10 shrink-0 overflow-hidden rounded-full bg-primary">
+          <Logo className="absolute bottom-0 left-1/2 h-10 w-auto -translate-x-1/2 translate-y-2.5" />
+        </span>
+        <span className="flex min-w-0 flex-col leading-tight">
+          <span className="truncate font-medium text-foreground">
+            Nweremizu Bruno
+          </span>
+          <span className="truncate text-sm text-secondary">{intro.role}</span>
+        </span>
+      </Link>
+
+      {/* One bordered capsule so the controls read as controls, not text. */}
+      <nav className="flex shrink-0 items-center gap-0.5 rounded-full p-1 shadow-[inset_0_0_0_1px_var(--border)]">
+        <Link
+          href="/writing"
+          className="flex h-8 items-center rounded-full px-3 text-sm text-secondary transition-[background-color,color] duration-150 hover:bg-card hover:text-foreground"
+        >
           Writing
         </Link>
-      </div>
-
-      <div className="size-12 bg-primary rounded-full relative flex items-center justify-center overflow-hidden justify-self-center">
-        <Link href="/" className="absolute inset-0 z-10" aria-label="Home" />
-        <Logo className="h-12 w-auto absolute bottom-0 translate-y-3" />
-      </div>
-
-      <div className="flex items-center justify-center gap-4.5 justify-self-end">
-        {navSocials.map(({ label, href, Icon }) => (
-          <a
-            key={label}
-            href={href}
-            aria-label={label}
-            // mailto: stays in place — opening a mail client in a new tab
-            // leaves a dead blank tab behind.
-            {...(/^https?:/i.test(href)
-              ? { target: "_blank", rel: "noopener noreferrer" }
-              : null)}
-            className="hidden md:block text-secondary transition-colors duration-150 ease hover:text-foreground rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
-          >
-            <Icon className="h-6 w-auto" />
-          </a>
-        ))}
-        <div className="h-6 w-px bg-secondary hidden md:block" />
         <ThemeToggle />
-      </div>
-    </nav>
+        <SoundToggle />
+      </nav>
+    </header>
   );
 }

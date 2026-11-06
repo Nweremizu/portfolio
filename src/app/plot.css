@@ -1,0 +1,1091 @@
+/* biome-ignore-all lint/complexity/noImportantStyles: lettering restyles cloned page elements that still carry their Tailwind utilities, and plot states must beat page styles. */
+/* biome-ignore-all lint/style/noDescendingSpecificity: rules are grouped by component (sheet, parts, rulers), not by specificity. */
+/* ===========================================================================
+   Plot intro + rulers. Motion is all here; components/plot only sets
+   geometry and custom properties. Timings mirror plot-intro.tsx:
+   part i draws at 560ms + i·110ms; --placed / --lettered come from JS.
+   =========================================================================== */
+
+:root {
+  --plot-paper: #2e6fff;
+  --plot-rule: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --plot-settle: cubic-bezier(0.4, 0, 0.2, 1);
+  --plot-hatch: repeating-linear-gradient(
+    -45deg,
+    rgb(255 255 255 / 0.28) 0 1px,
+    transparent 1px 5px
+  );
+  --plot-shine:
+    linear-gradient(
+      110deg,
+      transparent 35%,
+      rgb(255 255 255 / 0.2) 50%,
+      transparent 65%
+    )
+    0 0 / 220% 100% no-repeat;
+}
+.dark {
+  --plot-paper: #0f2a66;
+}
+
+/* ---- page state while plotting ------------------------------------------ */
+
+/* Blue paper from the very first paint, until the plot itself mounts. */
+#plot-cover {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 89;
+  background: var(--plot-paper);
+}
+html.plotting:not([data-plot]) #plot-cover {
+  display: block;
+}
+html.plotting:not(:has(.plot.wiping)) .sheet,
+html.plotting:not(:has(.plot.wiping)) .rulers {
+  opacity: 0;
+}
+html.plotting .rise {
+  animation-play-state: paused;
+}
+/* Measure boxes where they will land, not mid-entrance. */
+html.setting-out .rise {
+  transform: none !important;
+}
+html.plotlock,
+html.plotlock body {
+  overflow: hidden;
+  cursor: progress;
+}
+html.plotlock * {
+  cursor: progress !important;
+}
+
+/* ---- the sheet ------------------------------------------------------------ */
+
+/* Fixed, not sized from innerHeight: scroll is locked at the top anyway,
+   and this covers the whole paint area on every browser. */
+.plot {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  overflow: hidden;
+  --y: 0px;
+}
+.plot-sheet {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(var(--y) 0 0 0);
+  color: #fff;
+  background: var(--plot-paper);
+}
+/* 100px major / 20px minor, zeroed on the column's left edge. */
+.plot-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgb(255 255 255 / 0.22) 1px, transparent 1px)
+    var(--zerox, 0px) 0 / 100px 100px,
+    linear-gradient(90deg, rgb(255 255 255 / 0.22) 1px, transparent 1px)
+    var(--zerox, 0px) 0 / 100px 100px,
+    linear-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1px)
+    var(--zerox, 0px) 0 / 20px 20px,
+    linear-gradient(90deg, rgb(255 255 255 / 0.09) 1px, transparent 1px)
+    var(--zerox, 0px) 0 / 20px 20px;
+  animation: plot-fade 0.5s var(--plot-settle) both;
+}
+@media (hover: hover) and (min-width: 761px) {
+  .plot-sheet::before,
+  .plot-col,
+  .plot-datum,
+  .plot-ruler {
+    filter: url(#plot-graphite);
+  }
+}
+
+.plot-col {
+  position: absolute;
+  box-sizing: border-box;
+  border-inline: 1px solid rgb(255 255 255 / 0.7);
+  animation: plot-down 0.6s var(--plot-rule) 0.08s both;
+}
+.plot-datum {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgb(255 255 255 / 0.5);
+  animation: plot-across 0.5s var(--plot-rule) 0.28s both;
+}
+.plot-dim {
+  position: absolute;
+  height: 0;
+  border-top: 1px solid rgb(255 255 255 / 0.8);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  animation: plot-across 0.55s var(--plot-rule) 0.2s both;
+}
+.plot-dim::before,
+.plot-dim::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 8px;
+  background: rgb(255 255 255 / 0.8);
+}
+.plot-dim::before {
+  left: 0;
+}
+.plot-dim::after {
+  right: 0;
+}
+.plot-dim b {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  translate: -50% 0;
+  padding: 0 6px;
+  font-weight: 400;
+  background: var(--plot-paper);
+}
+.plot-note {
+  position: absolute;
+  font-family: var(--font-hand), "Bradley Hand", cursive;
+  font-size: 14.5px;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  rotate: -1.2deg;
+  opacity: 0.85;
+  animation: plot-write 0.5s var(--plot-rule) 0.45s both;
+}
+.plot-note.r {
+  rotate: 1deg;
+}
+
+/* ---- parts ---------------------------------------------------------------- */
+
+.plot-part {
+  position: absolute;
+  box-sizing: border-box;
+  transform-origin: left top;
+  animation: plot-draw 0.34s var(--plot-rule) both;
+  animation-delay: calc(0.56s + var(--i, 0) * 0.11s);
+}
+.pl-head,
+.pl-text {
+  border: 1px solid rgb(255 255 255 / 0.65);
+  background: var(--plot-hatch);
+  border-radius: 2px;
+}
+.pl-media {
+  border: 1px solid rgb(255 255 255 / 0.7);
+  background:
+    var(--plot-shine),
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 0.5px),
+      rgb(255 255 255 / 0.4) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    ),
+    linear-gradient(
+      to top left,
+      transparent calc(50% - 0.5px),
+      rgb(255 255 255 / 0.4) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    ), rgb(255 255 255 / 0.05);
+  animation:
+    plot-draw 0.34s var(--plot-rule) both,
+    plot-shimmer 1.4s linear infinite;
+  animation-delay:
+    calc(0.56s + var(--i, 0) * 0.11s), calc(0.56s + var(--i, 0) * 0.11s);
+}
+.pl-control {
+  border: 1px dashed rgb(255 255 255 / 0.8);
+}
+
+/* Blocks that get lettered: hatch + shimmer, then fade as the type arrives. */
+.plot-part.is-block {
+  animation-name: plot-draw, plot-unblock;
+  animation-duration: 0.34s, 0.3s;
+  animation-timing-function: var(--plot-rule), var(--plot-settle);
+  animation-delay:
+    calc(0.56s + var(--i, 0) * 0.11s),
+    calc(var(--lettered, 2.6s) + var(--i, 0) * 70ms);
+  animation-fill-mode: both, forwards;
+}
+.pl-head.is-block,
+.pl-text.is-block {
+  background: var(--plot-shine), var(--plot-hatch);
+  background-clip: padding-box;
+  animation-name: plot-draw, plot-shimmer, plot-unblock;
+  animation-duration: 0.34s, 1.4s, 0.3s;
+  animation-timing-function: var(--plot-rule), linear, var(--plot-settle);
+  animation-iteration-count: 1, infinite, 1;
+  animation-delay:
+    calc(0.56s + var(--i, 0) * 0.11s), calc(0.56s + var(--i, 0) * 0.11s),
+    calc(var(--lettered, 2.6s) + var(--i, 0) * 70ms);
+  animation-fill-mode: both, none, forwards;
+}
+/* Measured copy: drawn out to the full line, then sized down to its measure. */
+.pl-text.is-block.is-measured {
+  width: var(--full);
+  animation-name: plot-draw, plot-shimmer, plot-measure, plot-unblock;
+  animation-duration: 0.34s, 1.4s, 0.9s, 0.3s;
+  animation-timing-function:
+    var(--plot-rule), linear, var(--plot-settle), var(--plot-settle);
+  animation-iteration-count: 1, infinite, 1, 1;
+  animation-delay:
+    calc(0.56s + var(--i, 0) * 0.11s), calc(0.56s + var(--i, 0) * 0.11s),
+    calc(var(--placed, 1.5s) + var(--m, 0) * 0.32s),
+    calc(var(--lettered, 2.6s) + var(--i, 0) * 70ms);
+  animation-fill-mode: both, none, both, forwards;
+}
+
+.plot-label {
+  position: absolute;
+  margin: -15px 0 0;
+  padding: 0 4px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 400;
+  line-height: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--plot-paper);
+  background: #fff;
+  border-radius: 2px;
+  white-space: nowrap;
+  animation: plot-fade 0.24s var(--plot-settle) both;
+  animation-delay: calc(0.56s + var(--i, 0) * 0.11s + 0.3s);
+}
+.plot-label.is-control {
+  margin: -15px 0 0 6px;
+}
+.plot-label.is-tall {
+  margin: 3px 0 0 3px;
+}
+.plot-label.on-block {
+  animation:
+    plot-fade 0.24s var(--plot-settle) both,
+    plot-unblock 0.2s var(--plot-settle) forwards;
+  animation-delay:
+    calc(0.56s + var(--i, 0) * 0.11s + 0.22s),
+    calc(var(--lettered, 2.6s) + var(--i, 0) * 70ms);
+}
+
+/* Lettering: the real element, cloned, drawn as outline type. */
+.plot-words {
+  position: absolute;
+  color: transparent;
+  -webkit-text-stroke: 0.6px rgb(255 255 255 / 0.9);
+  text-decoration: none;
+  opacity: 0;
+  animation: plot-letter 0.36s var(--plot-settle) both;
+  animation-delay: calc(var(--lettered, 2.6s) + var(--i, 0) * 70ms + 60ms);
+}
+.plot-words *,
+.plot-words ::before,
+.plot-words ::after {
+  color: transparent !important;
+  -webkit-text-stroke: 0.6px rgb(255 255 255 / 0.9);
+  text-decoration: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-color: rgb(255 255 255 / 0.75) !important;
+}
+/* Our pills and buttons draw their edge with box-shadow, not border. */
+.plot-words .btn,
+.plot-words [class*="shadow-[inset"] {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.75) !important;
+}
+.plot-words h1,
+.plot-words h1 * {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 0;
+}
+.plot-icon {
+  display: inline-block;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  background:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 0.5px),
+      rgb(255 255 255 / 0.5) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    ),
+    linear-gradient(
+      to top left,
+      transparent calc(50% - 0.5px),
+      rgb(255 255 255 / 0.5) calc(50% - 0.5px) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    ) !important;
+}
+
+/* ---- dimensions ----------------------------------------------------------- */
+
+.plot-gap,
+.plot-run,
+.plot-size,
+.plot-width,
+.plot-slack {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  line-height: 13px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.plot-gap::before,
+.plot-run::before,
+.plot-width::before,
+.plot-slack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.8;
+}
+.plot-gap::after,
+.plot-run::after,
+.plot-width::after,
+.plot-slack::after,
+.plot-size::before {
+  content: attr(data-v);
+  position: absolute;
+  padding: 0 4px;
+  background: #fff;
+  color: var(--plot-paper);
+  border-radius: 2px;
+}
+
+.plot-gap {
+  width: 7px;
+  translate: -3px 0;
+  animation:
+    plot-gap-on 0.36s var(--plot-rule) both,
+    plot-unblock 0.24s var(--plot-settle) forwards;
+  animation-delay: var(--at, 1.5s), var(--lettered, 2.6s);
+}
+.plot-gap::before {
+  background:
+    repeating-linear-gradient(to bottom, #fff 0 3px, transparent 3px 6px) 50% 0
+    / 1px 100% no-repeat,
+    linear-gradient(#fff, #fff) 0 0 / 100% 1px no-repeat,
+    linear-gradient(#fff, #fff) 0 100% / 100% 1px no-repeat;
+}
+.plot-gap::after {
+  right: 10px;
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.plot-run {
+  height: 7px;
+  translate: 0 -3px;
+  animation:
+    plot-run-on 0.36s var(--plot-rule) both,
+    plot-unblock 0.24s var(--plot-settle) forwards;
+  animation-delay: var(--at, 1.5s), var(--lettered, 2.6s);
+}
+.plot-run::before,
+.plot-slack::before {
+  background:
+    repeating-linear-gradient(to right, #fff 0 3px, transparent 3px 6px) 0 50% /
+    100% 1px no-repeat,
+    linear-gradient(#fff, #fff) 0 0 / 1px 100% no-repeat,
+    linear-gradient(#fff, #fff) 100% 0 / 1px 100% no-repeat;
+}
+.plot-run::after,
+.plot-slack::after {
+  left: 50%;
+  bottom: 9px;
+  translate: -50% 0;
+}
+
+.plot-size {
+  translate: -50% 0;
+  animation:
+    plot-check 0.3s var(--plot-settle) both,
+    plot-unblock 0.24s var(--plot-settle) forwards;
+  animation-delay: var(--at, 1.5s), var(--lettered, 2.6s);
+}
+.plot-size::before {
+  position: static;
+}
+
+.plot-width {
+  height: 7px;
+  width: var(--w);
+  animation-name: plot-check, plot-measure, plot-unblock;
+  animation-duration: 0.3s, 0.9s, 0.3s;
+  animation-timing-function: var(--plot-settle);
+  animation-delay:
+    calc(0.56s + var(--i, 0) * 0.11s + 0.3s),
+    calc(var(--placed, 1.5s) + var(--m, 0) * 0.32s),
+    calc(var(--lettered, 2.6s) + var(--i, 0) * 70ms);
+  animation-fill-mode: both, both, forwards;
+}
+.plot-width::before {
+  background:
+    linear-gradient(#fff, #fff) 0 50% / 100% 1px no-repeat,
+    linear-gradient(#fff, #fff) 0 0 / 1px 100% no-repeat,
+    linear-gradient(#fff, #fff) 100% 0 / 1px 100% no-repeat;
+}
+.plot-width::after {
+  left: 50%;
+  top: -3px;
+  translate: -50% 0;
+}
+
+.plot-slack {
+  height: 7px;
+  translate: 0 -3px;
+  animation:
+    plot-check 0.3s var(--plot-settle) both,
+    plot-unblock 0.24s var(--plot-settle) forwards;
+  animation-delay:
+    calc(var(--placed, 1.5s) + var(--m, 0) * 0.32s + 0.24s),
+    var(--lettered, 2.6s);
+}
+
+/* The page rulers, redrawn on the sheet. */
+.plot-ruler {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 0.5);
+  animation: plot-fade 0.5s var(--plot-settle) 0.3s both;
+}
+.plot-ruler.x {
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0.7) 1px, transparent 1px)
+    var(--zerox, 0px) 0 / 100px 100%,
+    var(--plot-hatch);
+}
+.plot-ruler.y {
+  background:
+    linear-gradient(rgb(255 255 255 / 0.7) 1px, transparent 1px) 0 0 / 100%
+    100px,
+    var(--plot-hatch);
+}
+
+/* ---- progress tag and the wipe line ---------------------------------------- */
+
+.plot-pct {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 400;
+  line-height: 15px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--plot-paper);
+  background: #fff;
+  border: 1px solid var(--plot-paper);
+  border-radius: 2px;
+  white-space: nowrap;
+  transform-origin: left top;
+  transition:
+    opacity 0.28s ease,
+    scale 0.28s ease;
+}
+.plot-pct::before {
+  content: attr(data-v);
+}
+.plot-pct.gone {
+  opacity: 0;
+  scale: 0.9;
+}
+.plot-pct[hidden],
+.plot-line {
+  display: none;
+}
+.plot.wiping .plot-line {
+  display: block;
+}
+.plot.ending .plot-line {
+  transition: opacity 0.42s ease;
+  opacity: 0;
+}
+.plot-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--y);
+  height: 3px;
+  translate: 0 -1px;
+  background: linear-gradient(to bottom, #00d4ff, #fff 45% 55%, #ff4dd8);
+  box-shadow: 0 0 10px rgb(255 255 255 / 0.55);
+}
+.plot-line::before,
+.plot-line::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  width: 24px;
+  height: 3px;
+  background: var(--plot-paper);
+}
+.plot-line::before {
+  left: 0;
+}
+.plot-line::after {
+  right: 0;
+}
+
+/* ---- keyframes -------------------------------------------------------------- */
+
+@keyframes plot-fade {
+  from {
+    opacity: 0;
+  }
+}
+/* Explicit both ends: the type rests at opacity 0 until it is lettered. */
+@keyframes plot-letter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes plot-unblock {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes plot-down {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes plot-across {
+  from {
+    clip-path: inset(-8px 100% -8px 0);
+  }
+  to {
+    clip-path: inset(-8px 0 -8px 0);
+  }
+}
+@keyframes plot-write {
+  from {
+    clip-path: inset(0 100% -30% 0);
+  }
+  to {
+    clip-path: inset(0 -8% -30% 0);
+  }
+}
+@keyframes plot-draw {
+  from {
+    clip-path: inset(-16px 100% -18px 0);
+    opacity: 0.5;
+  }
+  to {
+    clip-path: inset(-16px -160px -18px 0);
+    opacity: 1;
+  }
+}
+@keyframes plot-shimmer {
+  from {
+    background-position:
+      120% 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      -120% 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+}
+@keyframes plot-measure {
+  0%,
+  30% {
+    width: var(--full);
+    animation-timing-function: var(--plot-settle);
+  }
+  58%,
+  to {
+    width: var(--w);
+  }
+}
+@keyframes plot-check {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+@keyframes plot-gap-on {
+  from {
+    clip-path: inset(0 -80px 100% -4px);
+  }
+  to {
+    clip-path: inset(0 -80px 0 -4px);
+  }
+}
+@keyframes plot-run-on {
+  from {
+    clip-path: inset(-16px 100% -4px 0);
+  }
+  to {
+    clip-path: inset(-16px 0 -4px 0);
+  }
+}
+
+/* ===========================================================================
+   Rulers
+   =========================================================================== */
+
+body {
+  position: relative;
+  overflow-x: clip;
+}
+.rulers {
+  --rail-soft: color-mix(in srgb, var(--foreground) 14%, transparent);
+  --rail-tick: color-mix(in srgb, var(--foreground) 30%, transparent);
+  --rail-line: color-mix(in srgb, var(--foreground) 8%, transparent);
+  --rail-ac: var(--primary);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  --on: 0;
+}
+.rx,
+.ry {
+  position: absolute;
+}
+.rx {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 19px;
+  overflow-x: clip;
+}
+.ry {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 19px;
+  overflow-y: clip;
+}
+.rticks {
+  position: absolute;
+  inset: 0;
+}
+.rx .rticks {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--rail-soft) 0 1px,
+    transparent 1px 10px
+  );
+  background-position-x: var(--zerox, 0px);
+  mask-image: linear-gradient(to bottom, transparent 13px, #000 13px);
+}
+.ry .rticks {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--rail-soft) 0 1px,
+    transparent 1px 10px
+  );
+  mask-image: linear-gradient(to right, transparent 13px, #000 13px);
+}
+.rx::after,
+.ry::after {
+  content: "";
+  position: absolute;
+  background: var(--rail-line);
+}
+.rx::after {
+  inset: auto 0 0 0;
+  height: 1px;
+}
+.ry::after {
+  inset: 0 0 0 auto;
+  width: 1px;
+}
+.rtick {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+  color: var(--secondary);
+  opacity: 0.8;
+}
+.rx .rtick {
+  bottom: 0;
+  padding: 0 0 8px 3px;
+}
+.rx .rtick::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 7px;
+  background: var(--rail-tick);
+}
+.ry .rtick {
+  right: 0;
+  writing-mode: vertical-rl;
+  padding: 3px 8px 0 0;
+}
+.ry .rtick::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 1px;
+  width: 7px;
+  background: var(--rail-tick);
+}
+.rmark {
+  position: absolute;
+  opacity: var(--on);
+  background: color-mix(in srgb, var(--rail-ac) 22%, transparent);
+  transition: opacity 0.12s ease;
+}
+.rmark::before,
+.rmark::after {
+  content: "";
+  position: absolute;
+  background: var(--rail-ac);
+}
+.rx .rmark {
+  top: 0;
+  bottom: 0;
+  left: var(--x, -60px);
+  width: 24px;
+  margin-left: -12px;
+}
+.rx .rmark::before {
+  top: 0;
+  bottom: 0;
+  left: 11px;
+  width: 1px;
+  opacity: 0.9;
+}
+.rx .rmark::after {
+  inset: auto 0 0 0;
+  height: 2px;
+}
+.ry .rmark {
+  left: 0;
+  right: 0;
+  top: var(--y, -60px);
+  height: 24px;
+  margin-top: -12px;
+}
+.ry .rmark::before {
+  left: 0;
+  right: 0;
+  top: 11px;
+  height: 1px;
+  opacity: 0.9;
+}
+.ry .rmark::after {
+  inset: 0 0 0 auto;
+  width: 2px;
+}
+.rsel {
+  position: absolute;
+  opacity: var(--sel, 0);
+  background: color-mix(in srgb, var(--rail-ac) 16%, transparent);
+  transition: opacity 0.14s ease;
+}
+.rsel::before,
+.rsel::after {
+  content: "";
+  position: absolute;
+  background: var(--rail-ac);
+  opacity: 0.55;
+}
+.rx .rsel {
+  top: 0;
+  bottom: 0;
+  left: var(--sx, 0px);
+  width: var(--sw, 0px);
+}
+.rx .rsel::before,
+.rx .rsel::after {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.rx .rsel::before {
+  left: 0;
+}
+.rx .rsel::after {
+  right: 0;
+}
+.ry .rsel {
+  left: 0;
+  right: 0;
+  top: var(--sy, 0px);
+  height: var(--sh, 0px);
+}
+.ry .rsel::before,
+.ry .rsel::after {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+.ry .rsel::before {
+  top: 0;
+}
+.ry .rsel::after {
+  bottom: 0;
+}
+.rsize,
+.rval {
+  position: absolute;
+  padding: 0 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.2;
+  color: var(--rail-ac);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rsize {
+  opacity: calc(var(--sel, 0) * 0.9);
+  transition: opacity 0.14s ease;
+}
+.rx .rsize {
+  bottom: 1px;
+  left: calc(var(--sx, 0px) + var(--sw, 0px) / 2);
+  translate: -50% 0;
+}
+.ry .rsize {
+  right: 1px;
+  top: calc(var(--sy, 0px) + var(--sh, 0px) / 2);
+  translate: 0 -50%;
+  writing-mode: vertical-rl;
+}
+.rval {
+  background: var(--background);
+  letter-spacing: 0.02em;
+  opacity: var(--on);
+  transition: opacity 0.12s ease;
+}
+.rx .rval {
+  top: 1px;
+  left: var(--x, -60px);
+  translate: -50% 0;
+}
+.ry .rval {
+  left: 1px;
+  top: var(--y, -60px);
+  translate: 0 -50%;
+  writing-mode: vertical-rl;
+}
+.rcorner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 19px;
+  height: 19px;
+  background: var(--background);
+  box-shadow:
+    inset -1px 0 var(--rail-line),
+    inset 0 -1px var(--rail-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plot,
+  #plot-cover {
+    display: none;
+  }
+}
+
+/* ===========================================================================
+   Selection frame (components/plot/selection-box.tsx)
+   =========================================================================== */
+.selection-box {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 80;
+  pointer-events: none;
+  /* Follows an extending (dragged) selection; a new selection remounts. */
+  transition-property: transform, width, height;
+  transition-duration: 90ms;
+  transition-timing-function: ease-out;
+}
+/* Outline + handles open from the selection's start, left to right. */
+.sb-frame {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--primary);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  animation: sb-open 140ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sb-handle {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  box-sizing: border-box;
+  background: var(--background);
+  border: 1px solid var(--primary);
+}
+.sb-handle.tl {
+  top: -4px;
+  left: -4px;
+}
+.sb-handle.tr {
+  top: -4px;
+  right: -4px;
+}
+.sb-handle.bl {
+  bottom: -4px;
+  left: -4px;
+}
+.sb-handle.br {
+  bottom: -4px;
+  right: -4px;
+}
+.sb-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--primary);
+  border-radius: 2px;
+  animation: sb-pill 120ms ease-out 60ms both;
+}
+.sb-label {
+  bottom: 100%;
+  left: -1px;
+  margin-bottom: 6px;
+  padding: 0 4px;
+  font-size: 9px;
+  line-height: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* The dark-theme accent is light; dark ink keeps the pill legible. */
+.dark .sb-label {
+  color: #0e0e0e;
+}
+
+/* CAD dimensions: a line set 8px off the frame, 8px end ticks (stopping 4px
+   short of the frame, the drafting gap), the value written alongside. */
+.sb-dim {
+  position: absolute;
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  animation: sb-pill 120ms ease-out 60ms both;
+}
+.sb-dim::before,
+.sb-dim::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.sb-dim {
+  font-style: normal;
+}
+/* Knocked out of whatever text sits behind, like lettering on a drawing. */
+.sb-dim b {
+  position: absolute;
+  padding: 1px 3px;
+  font-weight: 400;
+  white-space: nowrap;
+  background: var(--background);
+  border-radius: 2px;
+}
+.sb-dim-w {
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 8px;
+  border-top: 1px solid currentColor;
+}
+.sb-dim-w::before,
+.sb-dim-w::after {
+  top: -4px;
+  width: 1px;
+  height: 8px;
+}
+.sb-dim-w::before {
+  left: 0;
+}
+.sb-dim-w::after {
+  right: 0;
+}
+.sb-dim-w b {
+  top: 3px;
+  left: 50%;
+  translate: -50% 0;
+}
+.sb-dim-h {
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  margin-left: 8px;
+  border-left: 1px solid currentColor;
+}
+.sb-dim-h::before,
+.sb-dim-h::after {
+  left: -4px;
+  width: 8px;
+  height: 1px;
+}
+.sb-dim-h::before {
+  top: 0;
+}
+.sb-dim-h::after {
+  bottom: 0;
+}
+/* Reads bottom-to-top, the way a vertical dimension is lettered. */
+.sb-dim-h b {
+  top: 50%;
+  left: 3px;
+  writing-mode: vertical-rl;
+  transform: translateY(-50%) rotate(180deg);
+}
+@keyframes sb-open {
+  from {
+    clip-path: inset(-5px 100% -5px -5px);
+  }
+  to {
+    clip-path: inset(-5px -5px -5px -5px);
+  }
+}
+@keyframes sb-pill {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .selection-box,
+  .sb-frame,
+  .sb-label,
+  .sb-dim {
+    transition: none;
+    animation: none;
+  }
+}
