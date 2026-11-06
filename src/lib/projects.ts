@@ -28,6 +28,8 @@ export interface Project {
   links?: { demo?: string; github?: string };
   /** Hardware built for fun. Listed in its own section under the main grid. */
   hobby?: boolean;
+  /** Real screens, shown as a scrollable strip on the case study. Intrinsic px sizes. */
+  gallery?: { src: string; alt: string; width: number; height: number }[];
   caseStudy: CaseStudy;
 }
 
@@ -168,7 +170,7 @@ export const projects: Project[] = [
     description: "Invoicing redefined",
     summary:
       "Keipy is a mobile invoicing and inventory app I built for my dad's business, to replace an expensive invoicing platform with something cheaper, better-designed, and built to keep working when the connection drops.",
-    image: "/images/keipy.png",
+    image: "/images/keipy/hero.jpg",
     year: "2026",
     stack: [
       "React Native",
@@ -179,6 +181,33 @@ export const projects: Project[] = [
       "NativeWind",
     ],
     links: { demo: "https://keipy.xyz" },
+    // Google Play listing tiles, captured from the release build with Goldie.
+    gallery: [
+      {
+        src: "/images/keipy/store-home.jpg",
+        alt: "Keipy home dashboard: ₦1,950,000 collected this month, with recent invoices",
+        width: 2160,
+        height: 1920,
+      },
+      {
+        src: "/images/keipy/store-invoices.jpg",
+        alt: "Invoice list with paid, partially paid, unpaid, overdue and draft statuses",
+        width: 1080,
+        height: 1920,
+      },
+      {
+        src: "/images/keipy/store-invoice-detail.jpg",
+        alt: "Invoice INV-0003, stamped paid, with line items and a settled balance",
+        width: 1080,
+        height: 1920,
+      },
+      {
+        src: "/images/keipy/store-clients.jpg",
+        alt: "Client list with contact details",
+        width: 1080,
+        height: 1920,
+      },
+    ],
     caseStudy: {
       problem:
         "My dad's business was paying a premium subscription for an invoicing tool with a dated interface and thin inventory features. He already knew I could build software, so instead of paying for a tool built for someone else's workflow, I built one for his: quoting, invoicing, and stock tracking in a single flow, on a UI that feels like 2025 rather than 2015.",

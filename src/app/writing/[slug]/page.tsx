@@ -1,8 +1,8 @@
 import { marked } from "marked";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import PageIntro from "@/components/sections/page-intro";
-import WritingGrid from "@/components/writing/writing-grid";
+import { List, Row } from "@/components/list";
 import { formatDate } from "@/lib/date";
 import { getAllPosts, getPostBySlug } from "@/lib/db";
 import { SITE_NAME, TWITTER_HANDLE } from "@/lib/metadata";
@@ -71,27 +71,35 @@ export default async function WritingPostPage({
   const related = allPosts.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
-    <>
-      <PageIntro
-        kicker={formatDate(post.date)}
-        title={post.title}
-        variant="post"
-      />
+    <article className="rise">
+      <Link
+        href="/writing"
+        data-sound="navigation.backward"
+        className="font-mono text-xs text-secondary transition-colors hover:text-foreground"
+      >
+        ← Writing
+      </Link>
+      <h1 className="mt-8 text-balance text-[1.875rem] leading-[1.15] font-medium tracking-[-0.02em] text-foreground sm:text-[2.25rem]">
+        {post.title}
+      </h1>
+      <p className="mt-2 font-mono text-xs text-secondary">
+        {formatDate(post.date)}
+      </p>
 
-      <div className="w-full max-w-200 px-3">
+      <figure className="mt-10">
         {/* biome-ignore lint/performance/noImgElement: remote Unsplash photo, no local optimization pipeline for it */}
         <img
           src={post.coverImage}
-          alt={post.title}
-          className="w-full rounded-xl aspect-video object-cover outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)]"
+          alt=""
+          className="aspect-video w-full rounded-xl object-cover outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)]"
         />
-        <p className="text-sm text-secondary pt-2 italic">
+        <figcaption className="mt-2 font-mono text-xs text-secondary">
           Photo by{" "}
           <a
             href={post.coverCreditUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline decoration-dotted"
+            className="link"
           >
             {post.coverCreditName}
           </a>{" "}
@@ -100,32 +108,36 @@ export default async function WritingPostPage({
             href="https://unsplash.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline decoration-dotted"
+            className="link"
           >
             Unsplash
           </a>
-        </p>
-      </div>
+        </figcaption>
+      </figure>
 
-      <article
-        className={`w-full max-w-200 px-3 pb-16 ${PROSE_CLASS}`}
+      <div
+        className={`mt-6 ${PROSE_CLASS}`}
         // biome-ignore lint/security/noDangerouslySetInnerHtml: body is authored only through the password-gated admin page, not user-submitted.
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
       {related.length > 0 && (
-        <div className="w-full max-w-200 px-3 pb-24">
-          <div className="border-t border-secondary/20 pt-8">
-            <h2 className="text-2xl font-semibold text-foreground pb-4">
-              Related
-            </h2>
-            <WritingGrid
-              posts={related}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start"
-            />
-          </div>
-        </div>
+        <section className="mt-16">
+          <h2 className="mb-3 font-mono text-xs text-secondary">
+            More writing
+          </h2>
+          <List>
+            {related.map((p) => (
+              <Row
+                key={p.slug}
+                href={`/writing/${p.slug}`}
+                title={p.title}
+                meta={formatDate(p.date)}
+              />
+            ))}
+          </List>
+        </section>
       )}
-    </>
+    </article>
   );
 }

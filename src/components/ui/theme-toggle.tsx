@@ -1,55 +1,17 @@
 "use client";
 
 import { RiMoonLine, RiSunLine } from "@remixicon/react";
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { flushSync } from "react-dom";
 import type { Vibration } from "web-haptics";
 import { useWebHaptics } from "web-haptics/react";
 import { cn } from "@/lib/cn";
 
-// A soft tap that settles into a fading echo, matching the theme toggle's
-// gentle circular reveal rather than a sharp mechanical click. Only reaches
-// real vibration hardware — the audible cue is handled separately below,
-// since web-haptics' own audio fallback tops out at a 4ms noise burst
-// capped at 0.5 gain no matter how high `intensity` goes.
+// Vibration only; the audible cue comes from the sound system (data-sound).
 const THEME_TOGGLE_HAPTIC: Vibration[] = [
   { duration: 25, intensity: 0.4 },
   { delay: 50, duration: 40, intensity: 0.2 },
 ];
-
-let toggleAudioCtx: AudioContext | null = null;
-
-/**
- * A short pitch-dropping "tock" for the theme toggle, audible on any
- * speaker. Desktop and iOS have no Vibration API at all, so this — not
- * web-haptics' capped fallback — is the only feedback most visitors get.
- */
-function playThemeToggleTone() {
-  if (typeof AudioContext === "undefined") return;
-  toggleAudioCtx ??= new AudioContext();
-  if (toggleAudioCtx.state === "suspended") void toggleAudioCtx.resume();
-
-  const ctx = toggleAudioCtx;
-  const now = ctx.currentTime;
-
-  function blip(startAt: number, from: number, to: number, peak: number) {
-    const length = 0.09;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(from, startAt);
-    osc.frequency.exponentialRampToValueAtTime(to, startAt + length);
-    gain.gain.setValueAtTime(0.0001, startAt);
-    gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + length);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(startAt);
-    osc.stop(startAt + length + 0.02);
-  }
-
-  blip(now, 720, 360, 0.4);
-  blip(now + 0.09, 500, 260, 0.18);
-}
 
 export type ThemeMode = "light" | "dark";
 
@@ -281,11 +243,8 @@ export function ThemeToggle({
   className,
   transitionDuration = THEME_TRANSITION_DURATION,
 }: ThemetoggleProps) {
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const theme = useThemeMode();
   const dark = theme === "dark";
-  const switchRef = useRef<HTMLDivElement | null>(null);
-  const pointerOriginRef = useRef<ThemeTransitionOrigin | null>(null);
   const haptic = useWebHaptics();
 
   useEffect(() => {
@@ -299,9 +258,9 @@ export function ThemeToggle({
       aria-label={dark ? "Use light mode" : "Use dark mode"}
       aria-pressed={dark}
       title={dark ? "Light mode" : "Dark mode"}
+      data-sound="interaction.toggle"
       onClick={(event) => {
         haptic.trigger(THEME_TOGGLE_HAPTIC);
-        playThemeToggleTone();
         const pointerOrigin =
           event.clientX === 0 && event.clientY === 0
             ? null
@@ -312,15 +271,9 @@ export function ThemeToggle({
           duration: transitionDuration,
         });
       }}
-      className={cn(
-        "flex size-9 cursor-pointer items-center justify-center rounded-2lg",
-        "text-foreground-icon-secondary transition-[color,background-color,transform] duration-150 ease active:scale-[0.97]",
-        "hover:bg-background-secondary-hover hover:text-foreground-icon-primary",
-        "outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring",
-        className,
-      )}
+      className={cn("icon-btn", className)}
     >
-      <Icon className="theme-toggle-icon size-5" aria-hidden />
+      <Icon className="theme-toggle-icon size-4" aria-hidden />
     </button>
   );
 }

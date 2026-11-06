@@ -7,3 +7,13 @@ export function formatDate(isoDate: string): string {
     timeZone: "UTC",
   });
 }
+
+/** "2025-12-02" -> "Dec 2, 2025", for dense index rows. */
+export function formatShortDate(isoDate: string): string {
+  return new Date(isoDate).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
