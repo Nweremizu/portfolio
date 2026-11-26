@@ -131,8 +131,8 @@ export default async function ProjectPage({
                 alt={g.alt}
                 width={g.width}
                 height={g.height}
-                sizes="(min-width: 640px) 500px, 70vw"
-                className="h-96 w-auto shrink-0 snap-start rounded-xl outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] sm:h-[28rem] dark:outline-[oklch(1_0_0/0.1)]"
+                sizes="(min-width: 640px) 600px, 90vw"
+                className="h-auto max-h-96 w-auto max-w-[90%] shrink-0 snap-start self-center object-contain rounded-xl outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] sm:max-h-[28rem] dark:outline-[oklch(1_0_0/0.1)]"
               />
             ))}
           </div>
