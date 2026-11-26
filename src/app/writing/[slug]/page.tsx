@@ -87,14 +87,16 @@ export default async function WritingPostPage({
       </p>
 
       <figure className="mt-10">
-        {/* biome-ignore lint/performance/noImgElement: remote Unsplash photo, no local optimization pipeline for it */}
+        {/* biome-ignore lint/performance/noImgElement: remote cover image, no local optimization pipeline for it */}
         <img
           src={post.coverImage}
           alt=""
           className="aspect-video w-full rounded-xl object-cover outline outline-1 -outline-offset-1 outline-[oklch(0_0_0/0.1)] dark:outline-[oklch(1_0_0/0.1)]"
         />
         <figcaption className="mt-2 font-mono text-xs text-secondary">
-          Photo by{" "}
+          {post.coverCreditUrl.includes("https://unsplash.com/")
+            ? "Photo by "
+            : "Image from "}
           <a
             href={post.coverCreditUrl}
             target="_blank"
@@ -102,16 +104,21 @@ export default async function WritingPostPage({
             className="link"
           >
             {post.coverCreditName}
-          </a>{" "}
-          on{" "}
-          <a
-            href="https://unsplash.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link"
-          >
-            Unsplash
           </a>
+          {post.coverCreditUrl.includes("https://unsplash.com/") && (
+            <>
+              {" "}
+              on{" "}
+              <a
+                href="https://unsplash.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link"
+              >
+                Unsplash
+              </a>
+            </>
+          )}
         </figcaption>
       </figure>
 
