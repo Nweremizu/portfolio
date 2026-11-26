@@ -10,7 +10,13 @@
     {
       "name": "pharma",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:\\Development\\Web Apps\\pharma\\node_modules\\next\\dist\\bin\\next", "dev", "C:\\Development\\Web Apps\\pharma", "-p", "3100"],
+      "runtimeArgs": [
+        "C:\\Development\\Web Apps\\pharma\\node_modules\\next\\dist\\bin\\next",
+        "dev",
+        "C:\\Development\\Web Apps\\pharma",
+        "-p",
+        "3100"
+      ],
       "port": 3100
     }
   ]
