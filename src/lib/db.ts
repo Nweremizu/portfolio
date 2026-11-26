@@ -155,6 +155,56 @@ function unsplash(photoId: string): string {
 
 const seedPosts: Omit<Post, "id">[] = [
   {
+    slug: "the-tab-behind-dynamo",
+    title: "The tab behind Dynamo",
+    date: "2026-11-26",
+    coverImage:
+      "https://raw.githubusercontent.com/Nweremizu/dynamo/dceed2914baf16c2fbbd2caf4058ed15fe0b1eed/docs/social-preview.png",
+    coverCreditName: "Dynamo",
+    coverCreditUrl: "https://github.com/Nweremizu/dynamo",
+    body: `What annoyed me about the Dynamic Island was how much sense it made on the computer I already owned. Apple put it on the iPhone. Mac apps picked up the idea and turned the notch into a place to check a song. I wanted to reach for the top of my Windows desktop and do the same thing.
+
+Now there’s a browser tab just to the left of Dynamo on my desktop. From Windows’ point of view, a transparent strip stretches across the top of the monitor, in front of that tab. From the point of view of the person holding the mouse, there’s a small island in the middle of the screen and a perfectly ordinary browser tab beside it. A click needs to honour the second description. [Window implementation](https://github.com/Nweremizu/dynamo/blob/dceed29/src-tauri/src/window.rs)
+
+Dynamo grew out of HeyyCzer’s Island for Windows. It puts music, notifications and coding sessions within reach while another app has the foreground. I think the most revealing part of building a utility like this is accounting for the desktop it covers. Every time the island changes size, the bit of the desktop that belongs to it changes too. [Upstream project](https://github.com/HeyyCzer/windows-island)
+
+## The empty space
+
+The strip is 640 logical pixels tall. That gives the expanded panel room for its shadow and for the spring to travel a little past its resting point. Spanning the monitor also lets someone drag the island sideways along the top edge. That’s a reasonable amount of room to draw in and an absurd amount of desktop for a music control to claim. [Overlay geometry](https://github.com/Nweremizu/dynamo/blob/dceed29/src-tauri/src/window.rs)
+
+The native window ignores the mouse by default. The frontend marks the elements that should take input, measures their rectangles and sends them across the Tauri bridge. A thread on the Windows side checks the pointer against those rectangles. Move the pointer outside them and the application underneath gets the click. [Frontend measurements](https://github.com/Nweremizu/dynamo/blob/dceed29/src/core/useHitRects.ts)
+
+## A moving target
+
+A fixed rectangle would work for a fixed button. Dynamo can go from a track title to a player with album art, a progress bar and volume controls. The pointer can enter the player before the opening animation has settled. Waiting until the end to tell Windows where it can accept input leaves a visible control that the user can reach before the application can. [Music panel and compact view](https://github.com/Nweremizu/dynamo/tree/dceed29#modules)
+
+Measuring throughout the animation handles that case. The trouble was when the measurement happened. Motion had just written new positions. Asking the browser for the resulting rectangles inside the same frame forced another layout calculation. The tab strip was also measuring tab widths on renders where those widths couldn’t change. A glance at the finished player gave no clue that any of this work had happened. [Performance change](https://github.com/Nweremizu/dynamo/commit/b451e00)
+
+## The slower reader
+
+The native thread already checked the rectangles every 25 ms. That gave me a way to decide how often the frontend should send them. I let the frame render before measuring and capped the updates at the rate Windows could use them. The frontend also compares the rectangles with its last set, so identical measurements don’t need another message. [Hit-testing code](https://github.com/Nweremizu/dynamo/blob/dceed29/src/core/useHitRects.ts)
+
+In the development build, measuring the interactive regions cost about 90 ms across an expansion before the change and about 4 ms afterwards. On collapse it went from about 100 ms to 22 ms. Those figures count the work of finding the rectangles over a transition. The spring still gets to take its time opening the island. [Recorded measurements](https://github.com/Nweremizu/dynamo/commit/b451e00)
+
+## The keyboard
+
+The mouse is only half the arrangement. Hovering to see a song shouldn’t pull the next keystroke out of an editor. Typing into the island’s scratchpad does require focus. So does asking Claude a question. The native side tracks the last foreground window outside Dynamo and allows the island to take focus when a feature explicitly asks for it. Escape can then hand the keyboard back. [Focus handling](https://github.com/Nweremizu/dynamo/blob/dceed29/src-tauri/src/window.rs)
+
+## A reason to open
+
+A coding agent waiting for permission earns more space than a coding agent quietly editing a file. In the expanded panel I can read the command and answer it. If I’ve already answered in the terminal, the request disappears from the island. That last detail matters. A second place to make a decision would be frustrating if it also became a second place to dismiss it. [Agent integration](https://github.com/Nweremizu/dynamo/tree/dceed29#ai-agent-integrations)
+
+## The first hover
+
+The welcome tour puts that relationship to the test early. One step asks the user to hover over the actual island. Another listens for a real global shortcut. Enabling Windows notifications can restart the app halfway through setup, so the tour saves its place. By the time someone finishes, they’ve already opened the same window they’ll use tomorrow. [Welcome tour change](https://github.com/Nweremizu/dynamo/commit/7bd2050)
+
+## Back to the tab
+
+I think the best test for this kind of interface starts with two things worth clicking. Open the music panel, move across its edge and click the browser tab beside it while the panel closes. Then type. The tab should open and the typing should go exactly where the cursor says it will.
+
+That’s the part of Dynamo I’d want someone to take for granted.`,
+  },
+  {
     slug: "the-week-i-almost-let-ai-design-my-app",
     title: "The week I almost let AI design my whole app",
     date: "2025-10-14",
