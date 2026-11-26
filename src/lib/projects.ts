@@ -234,7 +234,7 @@ export const projects: Project[] = [
     description: "Beats Fit Pro controls for Windows",
     summary:
       "I built FitsWise so I could leave my phone on the desk when using my Beats Fit Pro with Windows. I can switch to transparency from the keyboard, see which bud is charging and put the controls away while the music keeps playing.",
-    image: "/images/fitswise/main-light.webp",
+    image: "/images/fitswise/project-cover.png",
     year: "2026",
     stack: ["Rust", "Tauri", "React", "TypeScript", "Three.js", "Vite"],
     links: {
