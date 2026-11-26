@@ -14,7 +14,9 @@ import { createPost, deletePost, updatePost } from "@/lib/db";
 
 export async function login(formData: FormData) {
   const password = String(formData.get("password") ?? "");
-  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip =
+    (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown";
 
   if (isLoginRateLimited(ip)) {
     redirect("/admin/login?error=1");

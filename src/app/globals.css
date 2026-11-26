@@ -2,23 +2,27 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-::view-transition-old(root),
-::view-transition-new(root) {
+::view-transition-old(theme-page),
+::view-transition-new(theme-page) {
   animation: none;
   mix-blend-mode: normal;
 }
 
-::view-transition-old(root) {
+::view-transition-old(theme-page) {
   z-index: 1;
 }
 
-::view-transition-new(root) {
+::view-transition-new(theme-page) {
   z-index: 2;
 }
 
-.theme-transitioning,
-.theme-transitioning * {
-  transition: none !important;
+:root.theme-transitioning {
+  view-transition-name: theme-page;
+}
+
+:root.theme-transitioning,
+:root.theme-transitioning * {
+  transition: none;
 }
 
 html,
@@ -61,7 +65,6 @@ html {
   scrollbar-color: color-mix(in srgb, var(--foreground) 25%, transparent)
     transparent;
 }
-
 
 :root {
   /* Neutral paper + ink, one accent. Muted greys clear 4.5:1 on both themes. */
@@ -163,7 +166,6 @@ body {
   }
 }
 
-
 /* Square icon control used by the header toggles. */
 .icon-btn {
   display: inline-flex;
@@ -195,7 +197,9 @@ body {
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
   text-underline-offset: 3px;
-  transition: text-decoration-color 150ms ease, color 150ms ease;
+  transition:
+    text-decoration-color 150ms ease,
+    color 150ms ease;
 }
 .link:hover {
   text-decoration-color: currentColor;
@@ -325,7 +329,9 @@ button:focus-visible {
   fill: var(--background);
   stroke: var(--pcb-pad);
   stroke-width: 1.2;
-  transition: fill 150ms ease-out, stroke 150ms ease-out;
+  transition:
+    fill 150ms ease-out,
+    stroke 150ms ease-out;
 }
 .pcb-led-glow {
   fill: var(--pcb-led);

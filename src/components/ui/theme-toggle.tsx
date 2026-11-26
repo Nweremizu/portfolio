@@ -61,7 +61,7 @@ function createThemeTransitionStyle(
   const style = document.createElement("style");
   style.id = THEME_TRANSITION_STYLE_ID;
   style.textContent = `
-    ::view-transition-new(root) {
+    ::view-transition-new(theme-page) {
       -webkit-mask-image: ${mask};
       mask-image: ${mask};
       -webkit-mask-repeat: no-repeat;

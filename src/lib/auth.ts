@@ -43,7 +43,9 @@ const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 
 export function isLoginRateLimited(key: string): boolean {
   const entry = loginAttempts.get(key);
-  return !!entry && entry.resetAt > Date.now() && entry.count >= MAX_LOGIN_ATTEMPTS;
+  return (
+    !!entry && entry.resetAt > Date.now() && entry.count >= MAX_LOGIN_ATTEMPTS
+  );
 }
 
 export function recordFailedLogin(key: string): void {

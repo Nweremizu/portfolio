@@ -210,6 +210,10 @@ function ghostOf(el: Element): HTMLElement {
     d.style.animation = "none";
     d.style.transition = "none";
   });
+  // The ghost sits in the content box, which is narrower than a padded pill;
+  // left to shrink-to-fit, the pill squeezes and its label spills past the edge.
+  copy.style.width = `${el.getBoundingClientRect().width}px`;
+  copy.style.boxSizing = "border-box";
   return copy;
 }
 
